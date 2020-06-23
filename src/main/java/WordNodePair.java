@@ -1,46 +1,53 @@
+import AnnotatedSentence.AnnotatedWord;
+import AnnotatedTree.ParenthesisInLayerException;
+import AnnotatedTree.ParseNodeDrawable;
+import ParseTree.Symbol;
+
 public class WordNodePair {
 
-    private String wordName;
+    private AnnotatedWord annotatedWord;
+    private ParseNodeDrawable node;
     private int no;
-    private int to;
-    private boolean heap;
-    private String treePos;
-    private String universalDependency;
+    private boolean done;
 
-    public WordNodePair(String wordName, int no, int to, boolean heap, String treePos, String universalDependency) {
-        this.wordName = wordName;
+    public WordNodePair(AnnotatedWord annotatedWord, int no) throws ParenthesisInLayerException {
+        this.annotatedWord = annotatedWord;
+        ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(annotatedWord.getParse().getTreePos()));
+        this.node = new ParseNodeDrawable(parent, annotatedWord.toString(), true, 0);
+        parent.addChild(node);
         this.no = no;
-        this.to = to;
-        this.heap = heap;
-        this.treePos = treePos;
-        this.universalDependency = universalDependency;
+        this.done = false;
     }
 
     public String getWordName() {
-        return wordName;
+        return annotatedWord.getName();
     }
 
     public int getNo() {
         return no;
     }
 
+    public ParseNodeDrawable getNode(){
+        return node;
+    }
+
     public int getTo() {
-        return to;
+        return annotatedWord.getUniversalDependency().to();
     }
 
-    public boolean getHeap() {
-        return heap;
+    public boolean isDone() {
+        return done;
     }
 
-    public void setHeap(Boolean heap) {
-        this.heap = heap;
+    public void done() {
+        this.done = true;
     }
 
     public String getTreePos() {
-        return treePos;
+        return annotatedWord.getParse().getTreePos();
     }
 
     public String getUniversalDependency() {
-        return universalDependency;
+        return annotatedWord.getUniversalDependency().toString();
     }
 }

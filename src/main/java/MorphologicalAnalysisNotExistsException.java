@@ -1,8 +1,8 @@
-public class MorphologicException extends Exception {
+public class MorphologicalAnalysisNotExistsException extends Exception {
 
     private String fileName;
 
-    public MorphologicException(String fileName) {
+    public MorphologicalAnalysisNotExistsException(String fileName) {
         this.fileName = fileName;
     }
 
