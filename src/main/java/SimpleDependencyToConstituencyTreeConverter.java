@@ -1,7 +1,6 @@
 import AnnotatedSentence.*;
 import AnnotatedTree.ParenthesisInLayerException;
 import AnnotatedTree.ParseNodeDrawable;
-import Cookies.Tuple.Pair;
 import ParseTree.*;
 import ParseTree.ParseTree;
 import Dictionary.Word;
@@ -10,43 +9,44 @@ import java.util.*;
 
 public class SimpleDependencyToConstituencyTreeConverter implements DependencyToConstituencyTreeConverter {
 
-    private ParseNodeDrawable parentOfNode;
     private ParseNodeDrawable specialWord;
 
-    private ArrayList<Pair<AnnotatedWord, Boolean>> constructWordList(AnnotatedSentence sentence, String fileName) throws MorphologicException, ConnectionFailedException {
-        ArrayList<Pair<AnnotatedWord, Boolean>> wordList = new ArrayList<>();
-        for (int j = 0; j < sentence.wordCount(); j++) {
-            wordList.add(new Pair<>((AnnotatedWord) sentence.getWord(j), true));
-        }
-        for (int i = 0; i < wordList.size(); i++) {
-            if (wordList.get(i).getKey().getParse() == null) {
-                throw new MorphologicException(fileName);
+    private ArrayList<WordNodePair> constructWordPairList(AnnotatedSentence sentence, String fileName) throws MorphologicalAnalysisNotExistsException, UniversalDependencyNotExistsException, ParenthesisInLayerException, NonProjectiveDependencyException {
+        ArrayList<WordNodePair> wordNodePairs = new ArrayList<>();
+        for (int i = 0; i < sentence.wordCount(); i++) {
+            AnnotatedWord annotatedWord1 = (AnnotatedWord) sentence.getWord(i);
+            if (annotatedWord1.getParse() == null) {
+                throw new MorphologicalAnalysisNotExistsException(fileName);
+            }
+            if (annotatedWord1.getUniversalDependency() == null) {
+                throw new UniversalDependencyNotExistsException(fileName);
+            }
+            int toWord1 = annotatedWord1.getUniversalDependency().to() - 1;
+            wordNodePairs.add(new WordNodePair(annotatedWord1, i));
+            for (int j = 0; j < sentence.wordCount(); j++) {
+                if (i == j){
+                    continue;
+                }
+                AnnotatedWord annotatedWord2 = (AnnotatedWord) sentence.getWord(j);
+                if (annotatedWord2.getUniversalDependency() == null) {
+                    throw new UniversalDependencyNotExistsException(fileName);
+                }
+                int toWord2 = annotatedWord2.getUniversalDependency().to() - 1;
+                if (i > j) {
+                    if (toWord2 > i && toWord1 > toWord2) {
+                        throw new NonProjectiveDependencyException(fileName);
+                    }
+                } else {
+                    if (toWord1 > j && toWord1 < toWord2) {
+                        throw new NonProjectiveDependencyException(fileName);
+                    }
+                }
             }
         }
-        for (int i = 0; i < wordList.size(); i++) {
-            if (wordList.get(i).getKey().getUniversalDependency() == null) {
-                throw new ConnectionFailedException(fileName);
-            }
-        }
-        return wordList;
+        return wordNodePairs;
     }
 
-    private ArrayList<ParseNodeDrawable> constructNodeList(ArrayList<Pair<AnnotatedWord, Boolean>> wordList) {
-        ArrayList<ParseNodeDrawable> nodeList = new ArrayList<>();
-        for (Pair<AnnotatedWord, Boolean> pair : wordList) {
-            ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(pair.getKey().getParse().getTreePos()));
-            try {
-                ParseNodeDrawable child = new ParseNodeDrawable(parent, pair.getKey().toString(), true, 0);
-                nodeList.add(child);
-                parent.addChild(child);
-            } catch (ParenthesisInLayerException e) {
-                e.printStackTrace();
-            }
-        }
-        return nodeList;
-    }
-
-    private boolean suitable(ArrayList<WordNodePair> wordList, int i) {
+    private boolean noIncomingNodes(ArrayList<WordNodePair> wordList, int i) {
         for (int j = 0; j < wordList.size(); j++) {
             WordNodePair word2 = wordList.get(j);
             int toWord2 = word2.getTo() - 1;
@@ -59,122 +59,259 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         return true;
     }
 
-    private ArrayList<ParseNodeDrawable> setOfNodesToBeMergedOntoNode(ArrayList<WordNodePair> wordList, WordNodePair rootWord, ArrayList<ParseNodeDrawable> nodeList, HashMap<WordNodePair, HashSet<WordNodePair>> annotatedWordMap, ArrayList<ParseNodeDrawable> punctuations) {
+    private void updateUnionCandidateLists(ArrayList<ParseNodeDrawable> list, WordNodePair wordNodePair, ArrayList<ParseNodeDrawable> punctuations, LinkedHashMap<String, ArrayList<ParseNodeDrawable>> specialsMap){
+        ParseNodeDrawable node = wordNodePair.getNode();
+        String dependency1 = wordNodePair.getUniversalDependency();
+        if (dependency1.equals("NSUBJ") || dependency1.equals("CSUBJ")) {
+            specialWord = getParent(node);
+        } else if (Word.isPunctuation(node.getParent().getData().getName()) && dependency1.equals("PUNCT")) {
+            punctuations.add(getParent(node));
+        } else specialsMap.getOrDefault(dependency1, list).add(getParent(node));
+    }
+
+    private ArrayList<ParseNodeDrawable> setOfNodesToBeMergedOntoNode(ArrayList<WordNodePair> wordNodePairs, WordNodePair rootWord, ArrayList<ParseNodeDrawable> punctuations, LinkedHashMap<String, ArrayList<ParseNodeDrawable>> specialsMap) {
         ArrayList<ParseNodeDrawable> list = new ArrayList<>();
-        for (int i = 0; i < wordList.size(); i++) {
-            WordNodePair word1 = wordList.get(i);
-            int toWord1 = word1.getTo() - 1;
-            String dependency1 = word1.getUniversalDependency();
-            if (wordList.get(i).getHeap()) {
-                if (suitable(wordList, i)) {
-                    if (annotatedWordMap.get(wordList.get(i)).contains(rootWord)) {
-                        wordList.get(i).setHeap(false);
-                        if (dependency1.equals("NSUBJ") || dependency1.equals("CSUBJ")) {
-                            specialWord = getParent(nodeList.get(i));
-                        } else if (Word.isPunctuation(nodeList.get(i).getParent().getData().getName()) && dependency1.equals("PUNCT")) {
-                            punctuations.add(getParent(nodeList.get(i)));
-                        } else {
-                            list.add(getParent(nodeList.get(i)));
-                        }
-                    }
+        for (int i = 0; i < wordNodePairs.size(); i++) {
+            WordNodePair wordNodePair = wordNodePairs.get(i);
+            int toWord1 = wordNodePair.getTo() - 1;
+            if (!wordNodePair.isDone()) {
+                if (noIncomingNodes(wordNodePairs, i) && toWord1 == rootWord.getNo()) {
+                    wordNodePairs.get(i).done();
+                    updateUnionCandidateLists(list, wordNodePair, punctuations, specialsMap);
                 }
             } else {
-                if (toWord1 > -1 && annotatedWordMap.get(wordList.get(i)).contains(rootWord)) {
-                    if (dependency1.equals("NSUBJ") || dependency1.equals("CSUBJ")) {
-                        specialWord = getParent(nodeList.get(i));
-                    } else if (Word.isPunctuation(nodeList.get(i).getParent().getData().getName()) && dependency1.equals("PUNCT")) {
-                        punctuations.add(getParent(nodeList.get(i)));
-                    } else {
-                        list.add(getParent(nodeList.get(i)));
-                    }
+                if (toWord1 > -1 && toWord1 == rootWord.getNo()) {
+                    updateUnionCandidateLists(list, wordNodePair, punctuations, specialsMap);
                 }
             }
         }
         return list;
     }
 
-    private ParseTree constructTreeFromWords(ArrayList<WordNodePair> wordList, ArrayList<ParseNodeDrawable> nodeList, HashMap<WordNodePair, HashSet<WordNodePair>> annotatedWordMap) {
-        for (int i = 0; i < wordList.size(); i++) {
-            specialWord = null;
-            ArrayList<ParseNodeDrawable> punctuations = new ArrayList<>();
-            ArrayList<ParseNodeDrawable> unionList = setOfNodesToBeMergedOntoNode(wordList, wordList.get(i), nodeList, annotatedWordMap, punctuations);
+    private boolean empty(LinkedHashMap<String, ArrayList<ParseNodeDrawable>> map) {
+        for (String key : map.keySet()) {
+            if (map.get(key).size() > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void fillWithSpecialsMap(ArrayList<ParseNodeDrawable> unionList, ArrayList<WordNodePair> wordNodePairs, String treePos, LinkedHashMap<String, ArrayList<ParseNodeDrawable>> specialsMap, ArrayList<ParseNodeDrawable> punctuations, int current) {
+        ParseNodeDrawable grandParent = new ParseNodeDrawable(new Symbol(treePos));
+        ParseNodeDrawable parent = null;
+        for (String key : specialsMap.keySet()) {
+            if (specialsMap.get(key).size() > 0) {
+                parent = new ParseNodeDrawable(new Symbol(treePos));
+                boolean visited = false;
+                for (WordNodePair wordNodePair : wordNodePairs) {
+                    ParseNodeDrawable parseNodeDrawable = wordNodePair.getNode();
+                    if (specialsMap.get(key).contains(getParent(parseNodeDrawable))) {
+                        parent.addChild(getParent(parseNodeDrawable));
+                    } else if (!visited && getParent(wordNodePairs.get(current).getNode()).equals(getParent(parseNodeDrawable))) {
+                        parent.addChild(getParent(parseNodeDrawable));
+                        visited = true;
+                    }
+                }
+            }
+        }
+        boolean visited = false;
+        ArrayList<ParseNodeDrawable> list = new ArrayList<>();
+        for (WordNodePair wordNodePair : wordNodePairs) {
+            ParseNodeDrawable parseNodeDrawable = wordNodePair.getNode();
+            if (unionList.contains(getParent(parseNodeDrawable))) {
+                list.add(getParent(parseNodeDrawable));
+            } else if (getParent(parseNodeDrawable).equals(specialWord)) {
+                list.add(specialWord);
+            } else if (!visited && parent != null && getParent(parseNodeDrawable).toString().equals(getParent(parent).toString())) {
+                visited = true;
+                list.add(getParent(parent));
+            }
+        }
+        if (punctuations.size() > 0) {
+            addChild(grandParent, wordNodePairs, list, punctuations);
+        } else {
+            addChild(grandParent, wordNodePairs, list, null);
+        }
+    }
+
+    // FIXME: 22.06.2020 157. satır sorunlu
+    private void fillWithJustSpecialsMap(ArrayList<WordNodePair> wordNodePairs, LinkedHashMap<String, ArrayList<ParseNodeDrawable>> specialsMap, String treePos, ArrayList<ParseNodeDrawable> punctuations, int current) {
+        ParseNodeDrawable grandParent = new ParseNodeDrawable(new Symbol("S"));
+        ParseNodeDrawable parent = null;
+        for (String key : specialsMap.keySet()) {
+            if (specialsMap.get(key).size() > 0) {
+                parent = new ParseNodeDrawable(new Symbol(treePos));
+                boolean visited = false;
+                for (WordNodePair wordNodePair : wordNodePairs) {
+                    ParseNodeDrawable parseNodeDrawable = wordNodePair.getNode();
+                    if (specialsMap.get(key).contains(getParent(parseNodeDrawable))) {
+                        parent.addChild(getParent(parseNodeDrawable));
+                    } else if (!visited && getParent(wordNodePairs.get(current).getNode()).equals(getParent(parseNodeDrawable))) {
+                        parent.addChild(getParent(parseNodeDrawable));
+                        visited = true;
+                    }
+                }
+            }
+        }
+        boolean visited = false;
+        if (punctuations.size() > 0 || specialWord != null) {
+            for (WordNodePair wordNodePair : wordNodePairs) {
+                ParseNodeDrawable parseNodeDrawable = wordNodePair.getNode();
+                if (punctuations.contains(getParent(parseNodeDrawable)) || punctuations.contains(parseNodeDrawable)) {
+                    grandParent.addChild(getParent(parseNodeDrawable));
+                } else if (!visited && parent != null && (parseNodeDrawable.equals(getParent(parent)) || getParent(parseNodeDrawable).equals(getParent(parent)))) {
+                    grandParent.addChild(getParent(parent));
+                    visited = true;
+                } else if (parseNodeDrawable.equals(specialWord)) {
+                    grandParent.addChild(specialWord);
+                }
+            }
+        } else {
+            for (WordNodePair wordNodePair : wordNodePairs) {
+                ParseNodeDrawable parseNodeDrawable = wordNodePair.getNode();
+                if (!visited && parent != null && parseNodeDrawable.equals(getParent(parent))) {
+                    grandParent.addChild(getParent(parent));
+                    visited = true;
+                }
+            }
+        }
+    }
+
+    private boolean merge(ArrayList<WordNodePair> wordNodePairs, LinkedHashMap<String, ArrayList<ParseNodeDrawable>> specialsMap, ArrayList<ParseNodeDrawable> unionList, ArrayList<ParseNodeDrawable> punctuations, int i) {
+        ParseNodeDrawable node = wordNodePairs.get(i).getNode();
+        if (empty(specialsMap)) {
             if (unionList.size() > 0) {
-                wordList.get(i).setHeap(false);
-                if (!getParent(nodeList.get(0)).equals(specialWord) && specialWord != null) {
-                    ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(wordList.get(i).getTreePos()));
+                wordNodePairs.get(i).done();
+                if (!getParent(wordNodePairs.get(0).getNode()).equals(specialWord) && specialWord != null) {
+                    ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(wordNodePairs.get(i).getTreePos()));
                     ArrayList<ParseNodeDrawable> current = new ArrayList<>();
-                    current.add(getParent(nodeList.get(i)));
+                    current.add(getParent(node));
                     current.addAll(unionList);
                     current.add(specialWord);
-                    addChildForSubject(parent, nodeList, current, punctuations, wordList.get(i).getTreePos());
+                    addChildForSubject(parent, wordNodePairs, current, punctuations);
                 } else {
-                    ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(wordList.get(i).getTreePos()));
+                    ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(wordNodePairs.get(i).getTreePos()));
                     ArrayList<ParseNodeDrawable> current = new ArrayList<>();
-                    current.add(getParent(nodeList.get(i)));
+                    current.add(getParent(node));
                     current.addAll(unionList);
                     if (specialWord != null) {
-                        addChild(parent, nodeList, current);
+                        addChild(parent, wordNodePairs, current, null);
                         ParseNodeDrawable grandParent = new ParseNodeDrawable(new Symbol("S"));
                         ArrayList<ParseNodeDrawable> addAll = new ArrayList<>();
                         addAll.add(specialWord);
                         addAll.add(parent);
-                        addChild(grandParent, nodeList, addAll, punctuations);
+                        addChild(grandParent, wordNodePairs, addAll, punctuations);
                     } else {
-                        addChild(parent, nodeList, current, punctuations);
+                        addChild(parent, wordNodePairs, current, punctuations);
                     }
                 }
+            } else if (specialWord != null) {
+                wordNodePairs.get(i).done();
+                ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(wordNodePairs.get(i).getTreePos()));
+                ArrayList<ParseNodeDrawable> current = new ArrayList<>();
+                current.add(specialWord);
+                current.add(getParent(node));
+                addChild(parent, wordNodePairs, current, punctuations);
+            } else if (punctuations.size() > 0) {
+                wordNodePairs.get(i).done();
+                ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(wordNodePairs.get(i).getTreePos()));
+                ArrayList<ParseNodeDrawable> current = new ArrayList<>(punctuations);
+                current.add(getParent(node));
+                addChild(parent, wordNodePairs, current, null);
+            }
+        } else {
+            wordNodePairs.get(i).done();
+            if (unionList.size() > 0) {
+                fillWithSpecialsMap(unionList, wordNodePairs, wordNodePairs.get(i).getTreePos(), specialsMap, punctuations, i);
             } else {
-                if (specialWord != null) {
-                    wordList.get(i).setHeap(false);
-                    ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(wordList.get(i).getTreePos()));
-                    ArrayList<ParseNodeDrawable> current = new ArrayList<>();
-                    current.add(specialWord);
-                    current.add(getParent(nodeList.get(i)));
-                    addChildForJustSpecial(parent, nodeList, current);
-                }
+                fillWithJustSpecialsMap(wordNodePairs, specialsMap, wordNodePairs.get(i).getTreePos(), punctuations, i);
             }
         }
-        if (!getParent(nodeList.get(0)).getData().equals(new Symbol("S"))) {
-            getParent(nodeList.get(0)).setData(new Symbol("S"));
+        return unionList.size() != 0 || punctuations.size() != 0 || !empty(specialsMap) || specialWord != null;
+    }
+
+    private int totalSizeOfMap(LinkedHashMap<String, ArrayList<ParseNodeDrawable>> specialsMap) {
+        int total = 0;
+        for (String key : specialsMap.keySet()) {
+            total += specialsMap.get(key).size();
         }
-        ParseNodeDrawable root = setRoot(nodeList);
+        return total;
+    }
+
+    private ParseTree constructTreeFromWords(ArrayList<WordNodePair> wordNodePairs, HashMap<Integer, ArrayList<Integer>> dependencyMap) {
+        HashSet<Coordinates> set = new HashSet<>();
+        boolean done = true;
+        int total;
+        while (done) {
+            int j = 0;
+            ArrayList<ParseNodeDrawable> unionList = new ArrayList<>();
+            ArrayList<ParseNodeDrawable> punctuations = new ArrayList<>();
+            LinkedHashMap<String, ArrayList<ParseNodeDrawable>> specialsMap = setSpecialMap();
+            do {
+                specialWord = null;
+                if (!set.contains(new Coordinates(j, wordNodePairs.get(j).getTo()))) {
+                    punctuations = new ArrayList<>();
+                    specialsMap = setSpecialMap();
+                    unionList = setOfNodesToBeMergedOntoNode(wordNodePairs, wordNodePairs.get(j), punctuations, specialsMap);
+                    j++;
+                    if (specialWord != null) {
+                        total = unionList.size() + punctuations.size() + 1 + totalSizeOfMap(specialsMap);
+                    } else {
+                        total = unionList.size() + punctuations.size() + totalSizeOfMap(specialsMap);
+                    }
+                    if ((dependencyMap.containsKey(j) && isThereAll(dependencyMap, j, total) && (unionList.size() != 0 || punctuations.size() != 0 || !empty(specialsMap) || specialWord != null))) {
+                        break;
+                    }
+                } else {
+                    j++;
+                }
+                if (j == wordNodePairs.size()) {
+                    break;
+                }
+            } while (true);
+            set.add(new Coordinates(j - 1, wordNodePairs.get(j - 1).getTo()));
+            done = merge(wordNodePairs, specialsMap, unionList, punctuations, j - 1);
+        }
+        if (!getParent(wordNodePairs.get(0).getNode()).getData().equals(new Symbol("S"))) {
+            getParent(wordNodePairs.get(0).getNode()).setData(new Symbol("S"));
+        }
+        ParseNodeDrawable root = setRoot(wordNodePairs);
         return new ParseTree(root);
     }
 
-    private ParseNodeDrawable setRoot(ArrayList<ParseNodeDrawable> nodeList) {
+    private boolean isThereAll(HashMap<Integer, ArrayList<Integer>> map, int current, int total) {
+        return map.get(current).size() == total;
+    }
+
+    private ParseNodeDrawable setRoot(ArrayList<WordNodePair> wordNodePairs) {
         ParseNodeDrawable root;
-        if (getParent(nodeList.get(0)).numberOfChildren() > 1) {
-            root = getParent(nodeList.get(0));
+        ParseNodeDrawable parent = getParent(wordNodePairs.get(0).getNode());
+        if (parent.numberOfChildren() > 1) {
+            root = parent;
         } else {
-            root = (ParseNodeDrawable) getParent(nodeList.get(0)).getChild(0);
+            root = (ParseNodeDrawable) parent.getChild(0);
             root.setData(new Symbol("S"));
         }
         return root;
     }
 
-    private void addChildForJustSpecial(ParseNodeDrawable parent, ArrayList<ParseNodeDrawable> nodeList, ArrayList<ParseNodeDrawable> current) {
-        for (ParseNodeDrawable parseNodeDrawable : nodeList) {
-            if (current.contains(getParent(parseNodeDrawable))) {
-                parent.addChild(getParent(parseNodeDrawable));
-            }
-        }
-    }
-
-    private void addChildForSubject(ParseNodeDrawable parent, ArrayList<ParseNodeDrawable> nodeList, ArrayList<ParseNodeDrawable> current, ArrayList<ParseNodeDrawable> punctuations, String treePos) {
+    private void addChildForSubject(ParseNodeDrawable parent, ArrayList<WordNodePair> wordNodePairs, ArrayList<ParseNodeDrawable> current, ArrayList<ParseNodeDrawable> punctuations) {
         ParseNodeDrawable grandParent = new ParseNodeDrawable(parent.getData());
         boolean check = false;
         if (punctuations.size() == 0) {
-            for (int i = 0; i < nodeList.size(); i++) {
-                if (getParent(nodeList.get(i)).equals(specialWord)) {
+            for (WordNodePair wordNodePair : wordNodePairs) {
+                ParseNodeDrawable parseNodeDrawable = wordNodePair.getNode();
+                if (getParent(parseNodeDrawable).equals(specialWord)) {
                     check = true;
                 } else {
                     if (check) {
-                        if (current.contains(getParent(nodeList.get(i)))) {
-                            parent.addChild(getParent(nodeList.get(i)));
+                        if (current.contains(getParent(parseNodeDrawable))) {
+                            parent.addChild(getParent(parseNodeDrawable));
                         }
                     } else {
-                        if (current.contains(getParent(nodeList.get(i)))) {
-                            grandParent.addChild(getParent(nodeList.get(i)));
+                        if (current.contains(getParent(parseNodeDrawable))) {
+                            grandParent.addChild(getParent(parseNodeDrawable));
                         }
                     }
                 }
@@ -183,24 +320,25 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
             grandParent.addChild(parent);
         } else {
             boolean punctuationCheck = true;
-            for (int i = 0; i < nodeList.size(); i++) {
-                if (punctuations.contains(getParent(nodeList.get(i)))) {
+            for (WordNodePair wordNodePair : wordNodePairs) {
+                ParseNodeDrawable parseNodeDrawable = wordNodePair.getNode();
+                if (punctuations.contains(getParent(parseNodeDrawable))) {
                     if (check && punctuationCheck) {
                         punctuationCheck = false;
                         grandParent.addChild(parent);
                     }
-                    grandParent.addChild(getParent(nodeList.get(i)));
-                } else if (getParent(nodeList.get(i)).equals(specialWord)) {
+                    grandParent.addChild(getParent(parseNodeDrawable));
+                } else if (getParent(parseNodeDrawable).equals(specialWord)) {
                     grandParent.addChild(specialWord);
                     check = true;
                 } else {
                     if (check) {
-                        if (current.contains(getParent(nodeList.get(i)))) {
-                            parent.addChild(getParent(nodeList.get(i)));
+                        if (current.contains(getParent(parseNodeDrawable))) {
+                            parent.addChild(getParent(parseNodeDrawable));
                         }
                     } else {
-                        if (current.contains(getParent(nodeList.get(i)))) {
-                            grandParent.addChild(getParent(nodeList.get(i)));
+                        if (current.contains(getParent(parseNodeDrawable))) {
+                            grandParent.addChild(getParent(parseNodeDrawable));
                         }
                     }
                 }
@@ -208,20 +346,13 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         }
     }
 
-    private void addChild(ParseNodeDrawable parent, ArrayList<ParseNodeDrawable> nodeList, ArrayList<ParseNodeDrawable> current, ArrayList<ParseNodeDrawable> punctuations) {
-        for (ParseNodeDrawable parseNodeDrawable : nodeList) {
+    private void addChild(ParseNodeDrawable parent, ArrayList<WordNodePair> wordNodePairs, ArrayList<ParseNodeDrawable> current, ArrayList<ParseNodeDrawable> punctuations) {
+        for (WordNodePair wordNodePair : wordNodePairs) {
+            ParseNodeDrawable parseNodeDrawable = wordNodePair.getNode();
             if (current.contains(getParent(parseNodeDrawable))) {
                 parent.addChild(getParent(parseNodeDrawable));
             }
-            if (punctuations.contains(getParent(parseNodeDrawable))) {
-                parent.addChild(getParent(parseNodeDrawable));
-            }
-        }
-    }
-
-    private void addChild(ParseNodeDrawable parent, ArrayList<ParseNodeDrawable> nodeList, ArrayList<ParseNodeDrawable> current) {
-        for (ParseNodeDrawable parseNodeDrawable : nodeList) {
-            if (current.contains(getParent(parseNodeDrawable))) {
+            if (punctuations != null && punctuations.contains(getParent(parseNodeDrawable))) {
                 parent.addChild(getParent(parseNodeDrawable));
             }
         }
@@ -229,81 +360,53 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
 
     private ParseNodeDrawable getParent(ParseNodeDrawable node) {
         if (node.getParent() != null) {
-            parentOfNode = (ParseNodeDrawable) node.getParent();
-            getParent((ParseNodeDrawable) node.getParent());
+            return getParent((ParseNodeDrawable) node.getParent());
+        } else {
+            return node;
         }
-        return parentOfNode;
     }
 
-    private HashMap<WordNodePair, HashSet<WordNodePair>> setHashMap(ArrayList<WordNodePair> wordList) {
-        HashMap<WordNodePair, HashSet<WordNodePair>> map = new HashMap<>();
-        for (int i = 0; i < wordList.size(); i++) {
-            WordNodePair current = wordList.get(i);
-            if (current.getTo() > 0) {
-                if (!map.containsKey(current)) {
-                    map.put(current, new HashSet<>());
-                }
-                map.get(current).add(wordList.get(current.getTo() - 1));
-            }
-        }
+    private LinkedHashMap<String, ArrayList<ParseNodeDrawable>> setSpecialMap() {
+        LinkedHashMap<String, ArrayList<ParseNodeDrawable>> map = new LinkedHashMap<>();
+        map.put("COMPOUND", new ArrayList<>());
+        map.put("AUX", new ArrayList<>());
+        map.put("DET", new ArrayList<>());
+        map.put("AMOD", new ArrayList<>());
+        map.put("NUMMOD", new ArrayList<>());
+        map.put("CASE", new ArrayList<>());
+        map.put("NEG", new ArrayList<>());
         return map;
     }
 
-    private ArrayList<WordNodePair> setListOfWord(ArrayList<Pair<AnnotatedWord, Boolean>> wordList, String fileName) throws WordIntersectionException {
-        for (int i = 0; i < wordList.size(); i++) {
-            for (int j = 0; j < wordList.size(); j++) {
-                if (i != j) {
-                    if (i > j) {
-                        if (wordList.get(j).getKey().getUniversalDependency().to() - 1 > i && wordList.get(i).getKey().getUniversalDependency().to() - 1 > wordList.get(j).getKey().getUniversalDependency().to() - 1) {
-                            throw new WordIntersectionException(fileName);
-                        }
-                    } else {
-                        if (wordList.get(i).getKey().getUniversalDependency().to() - 1 > j && wordList.get(i).getKey().getUniversalDependency().to() - 1 < wordList.get(j).getKey().getUniversalDependency().to() - 1) {
-                            throw new WordIntersectionException(fileName);
-                        }
-                    }
-                }
+    private HashMap<Integer, ArrayList<Integer>> setDependencyMap(ArrayList<WordNodePair> wordNodePairs) {
+        HashMap<Integer, ArrayList<Integer>> map = new HashMap<>();
+        for (int i = 0; i < wordNodePairs.size(); i++) {
+            int to;
+            if (wordNodePairs.get(i).getTo() == 0) {
+                to = wordNodePairs.size();
+            } else {
+                to = wordNodePairs.get(i).getTo();
             }
-        }
-        ArrayList<WordNodePair> list = new ArrayList<>();
-        for (int i = 0; i < wordList.size(); i++) {
-            if (wordList.get(i).getKey().getUniversalDependency() != null) {
-                list.add(new WordNodePair(wordList.get(i).getKey().getName(), i + 1, wordList.get(i).getKey().getUniversalDependency().to(), wordList.get(i).getValue(), wordList.get(i).getKey().getParse().getTreePos(), wordList.get(i).getKey().getUniversalDependency().toString()));
+            if (!map.containsKey(to)) {
+                map.put(to, new ArrayList<>());
             }
+            map.get(to).add(i);
         }
-        return list;
-    }
-
-    private LinkedHashMap<String, LinkedList<ParseNodeDrawable>> setSpecialMap() {
-        LinkedHashMap<String, LinkedList<ParseNodeDrawable>> map = new LinkedHashMap<>();
-        map.put("COMPOUND", new LinkedList<>());
-        map.put("AMOD", new LinkedList<>());
-        map.put("NUMMOD", new LinkedList<>());
-        map.put("CASE", new LinkedList<>());
-        map.put("NEG", new LinkedList<>());
         return map;
     }
 
     public ParseTree convert(AnnotatedSentence annotatedSentence) {
         try {
-            ArrayList<Pair<AnnotatedWord, Boolean>> wordList = constructWordList(annotatedSentence, annotatedSentence.getFileName());
-            try {
-                ArrayList<WordNodePair> listOfWord = setListOfWord(wordList, annotatedSentence.getFileName());
-                if (wordList.size() == listOfWord.size()) {
-                    ArrayList<ParseNodeDrawable> nodeList =  constructNodeList(wordList);
-                    HashMap<WordNodePair, HashSet<WordNodePair>> annotatedWordMap = setHashMap(listOfWord);
-                    if (listOfWord.size() > 1) {
-                        return constructTreeFromWords(listOfWord, nodeList, annotatedWordMap);
-                    } else {
-                        ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol("S"));
-                        parent.addChild(new ParseNodeDrawable(new Symbol(listOfWord.get(0).getTreePos())));
-                        return new ParseTree(parent);
-                    }
-                }
-            } catch (WordIntersectionException e) {
-                System.out.println(e.toString());
+            ArrayList<WordNodePair> wordNodePairs = constructWordPairList(annotatedSentence, annotatedSentence.getFileName());
+            HashMap<Integer, ArrayList<Integer>> dependencyMap = setDependencyMap(wordNodePairs);
+            if (wordNodePairs.size() > 1) {
+                return constructTreeFromWords(wordNodePairs, dependencyMap);
+            } else {
+                ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol("S"));
+                parent.addChild(wordNodePairs.get(0).getNode());
+                return new ParseTree(parent);
             }
-        } catch (MorphologicException | ConnectionFailedException e) {
+        } catch (MorphologicalAnalysisNotExistsException | UniversalDependencyNotExistsException | ParenthesisInLayerException | NonProjectiveDependencyException e) {
             System.out.println(e.toString());
         }
         return null;
