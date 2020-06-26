@@ -12,7 +12,14 @@ public class WordNodePair {
 
     public WordNodePair(AnnotatedWord annotatedWord, int no) throws ParenthesisInLayerException {
         this.annotatedWord = annotatedWord;
-        ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(annotatedWord.getParse().getTreePos()));
+        ParseNodeDrawable parent;
+        if (getUniversalDependency().equals("ADVMOD")) {
+            parent = new ParseNodeDrawable(new Symbol("ADVP"));
+        } else if (getUniversalDependency().equals("ACL")) {
+            parent = new ParseNodeDrawable(new Symbol("ADJP"));
+        } else {
+            parent = new ParseNodeDrawable(new Symbol(annotatedWord.getParse().getTreePos()));
+        }
         this.node = new ParseNodeDrawable(parent, annotatedWord.toString(), true, 0);
         parent.addChild(node);
         this.no = no;
