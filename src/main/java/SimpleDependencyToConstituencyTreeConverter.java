@@ -135,9 +135,8 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         }
     }
 
-    // FIXME: 22.06.2020 157. satır sorunlu
     private void fillWithJustSpecialsMap(ArrayList<WordNodePair> wordNodePairs, LinkedHashMap<String, ArrayList<ParseNodeDrawable>> specialsMap, String treePos, ArrayList<ParseNodeDrawable> punctuations, int current) {
-        ParseNodeDrawable grandParent = new ParseNodeDrawable(new Symbol("S"));
+        ParseNodeDrawable grandParent = new ParseNodeDrawable(new Symbol(treePos));
         ParseNodeDrawable parent = null;
         for (String key : specialsMap.keySet()) {
             if (specialsMap.get(key).size() > 0) {
@@ -163,7 +162,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                 } else if (!visited && parent != null && (parseNodeDrawable.equals(getParent(parent)) || getParent(parseNodeDrawable).equals(getParent(parent)))) {
                     grandParent.addChild(getParent(parent));
                     visited = true;
-                } else if (parseNodeDrawable.equals(specialWord)) {
+                } else if (parseNodeDrawable.equals(specialWord) || getParent(parseNodeDrawable).equals(specialWord)) {
                     grandParent.addChild(specialWord);
                 }
             }
@@ -197,7 +196,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                     current.addAll(unionList);
                     if (specialWord != null) {
                         addChild(parent, wordNodePairs, current, null);
-                        ParseNodeDrawable grandParent = new ParseNodeDrawable(new Symbol("S"));
+                        ParseNodeDrawable grandParent = new ParseNodeDrawable(new Symbol(wordNodePairs.get(i).getTreePos()));
                         ArrayList<ParseNodeDrawable> addAll = new ArrayList<>();
                         addAll.add(specialWord);
                         addAll.add(parent);
@@ -222,13 +221,60 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
             }
         } else {
             wordNodePairs.get(i).done();
-            if (unionList.size() > 0) {
-                fillWithSpecialsMap(unionList, wordNodePairs, wordNodePairs.get(i).getTreePos(), specialsMap, punctuations, i);
+            if (controlMap(specialsMap, wordNodePairs, i)) {
+                if (unionList.size() > 0) {
+                    fillWithSpecialsMap(unionList, wordNodePairs, wordNodePairs.get(i).getTreePos(), specialsMap, punctuations, i);
+                } else {
+                    fillWithJustSpecialsMap(wordNodePairs, specialsMap, wordNodePairs.get(i).getTreePos(), punctuations, i);
+                }
             } else {
-                fillWithJustSpecialsMap(wordNodePairs, specialsMap, wordNodePairs.get(i).getTreePos(), punctuations, i);
+                for (String key : specialsMap.keySet()) {
+                    unionList.addAll(specialsMap.get(key));
+                }
+                specialsMap = setSpecialMap();
+                merge(wordNodePairs, specialsMap, unionList, punctuations, i);
             }
         }
         return unionList.size() != 0 || punctuations.size() != 0 || !empty(specialsMap) || specialWord != null;
+    }
+
+    private WordNodePair convert(ArrayList<WordNodePair> wordNodePairs, ParseNodeDrawable parseNodeDrawable) {
+        for (WordNodePair wordNodePair : wordNodePairs) {
+            if (getParent(wordNodePair.getNode()).equals(getParent(parseNodeDrawable))) {
+                return wordNodePair;
+            }
+        }
+        return null;
+    }
+
+    private boolean controlMap(LinkedHashMap<String, ArrayList<ParseNodeDrawable>> specialsMap, ArrayList<WordNodePair> wordNodePairs, int current) {
+        ArrayList<Integer> list = new ArrayList<>();
+        list.add(current);
+        for (String key : specialsMap.keySet()) {
+            for (int i = 0; i < specialsMap.get(key).size(); i++) {
+                WordNodePair node = convert(wordNodePairs, specialsMap.get(key).get(i));
+                if (node != null) {
+                    list.add(node.getNo());
+                }
+            }
+        }
+        for (int i = 0; i < list.size(); i++) {
+            for (int j = 0; j < list.size(); j++) {
+                if (list.get(i) < list.get(j)) {
+                    int temporary = list.get(i);
+                    list.set(i, list.get(j));
+                    list.set(j, temporary);
+                }
+            }
+        }
+        for (int i = 0; i < list.size(); i++) {
+            if (i + 1 < list.size()) {
+                if (list.get(i) + 1 != list.get(i + 1)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private int totalSizeOfMap(LinkedHashMap<String, ArrayList<ParseNodeDrawable>> specialsMap) {
