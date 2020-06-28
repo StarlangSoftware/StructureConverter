@@ -183,23 +183,23 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
             if (unionList.size() > 0) {
                 wordNodePairs.get(i).done();
                 if (!getParent(wordNodePairs.get(0).getNode()).equals(specialWord) && specialWord != null) {
-                    ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(wordNodePairs.get(i).getTreePos()));
                     ArrayList<ParseNodeDrawable> current = new ArrayList<>();
                     current.add(getParent(node));
                     current.addAll(unionList);
                     current.add(specialWord);
+                    ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(setTreePos(wordNodePairs, current, specialsMap, wordNodePairs.get(i).getTreePos())));
                     addChildForSubject(parent, wordNodePairs, current, punctuations, i);
                 } else {
-                    ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(wordNodePairs.get(i).getTreePos()));
                     ArrayList<ParseNodeDrawable> current = new ArrayList<>();
                     current.add(getParent(node));
                     current.addAll(unionList);
+                    ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(setTreePos(wordNodePairs, current, specialsMap, wordNodePairs.get(i).getTreePos())));
                     if (specialWord != null) {
                         addChild(parent, wordNodePairs, current, null);
-                        ParseNodeDrawable grandParent = new ParseNodeDrawable(new Symbol(wordNodePairs.get(i).getTreePos()));
                         ArrayList<ParseNodeDrawable> addAll = new ArrayList<>();
                         addAll.add(specialWord);
                         addAll.add(parent);
+                        ParseNodeDrawable grandParent = new ParseNodeDrawable(new Symbol(setTreePos(wordNodePairs, addAll, specialsMap, wordNodePairs.get(i).getTreePos())));
                         addChild(grandParent, wordNodePairs, addAll, punctuations);
                     } else {
                         addChild(parent, wordNodePairs, current, punctuations);
@@ -207,25 +207,25 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                 }
             } else if (specialWord != null) {
                 wordNodePairs.get(i).done();
-                ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(wordNodePairs.get(i).getTreePos()));
                 ArrayList<ParseNodeDrawable> current = new ArrayList<>();
                 current.add(specialWord);
                 current.add(getParent(node));
+                ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(setTreePos(wordNodePairs, current, specialsMap, wordNodePairs.get(i).getTreePos())));
                 addChild(parent, wordNodePairs, current, punctuations);
             } else if (punctuations.size() > 0) {
                 wordNodePairs.get(i).done();
-                ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(wordNodePairs.get(i).getTreePos()));
                 ArrayList<ParseNodeDrawable> current = new ArrayList<>(punctuations);
                 current.add(getParent(node));
+                ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(setTreePos(wordNodePairs, current, specialsMap, wordNodePairs.get(i).getTreePos())));
                 addChild(parent, wordNodePairs, current, null);
             }
         } else {
             wordNodePairs.get(i).done();
             if (controlMap(specialsMap, wordNodePairs, i)) {
                 if (unionList.size() > 0) {
-                    fillWithSpecialsMap(unionList, wordNodePairs, wordNodePairs.get(i).getTreePos(), specialsMap, punctuations, i);
+                    fillWithSpecialsMap(unionList, wordNodePairs, setTreePos(wordNodePairs, unionList, specialsMap, wordNodePairs.get(i).getTreePos()), specialsMap, punctuations, i);
                 } else {
-                    fillWithJustSpecialsMap(wordNodePairs, specialsMap, wordNodePairs.get(i).getTreePos(), punctuations, i);
+                    fillWithJustSpecialsMap(wordNodePairs, specialsMap, setTreePos(wordNodePairs, unionList, specialsMap, wordNodePairs.get(i).getTreePos()), punctuations, i);
                 }
             } else {
                 for (String key : specialsMap.keySet()) {
@@ -238,7 +238,26 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         return unionList.size() != 0 || punctuations.size() != 0 || !empty(specialsMap) || specialWord != null;
     }
 
-    private WordNodePair convert(ArrayList<WordNodePair> wordNodePairs, ParseNodeDrawable parseNodeDrawable) {
+    private String setTreePos(ArrayList<WordNodePair> wordNodePairs, ArrayList<ParseNodeDrawable> list, LinkedHashMap<String, ArrayList<ParseNodeDrawable>> specialsMap, String currentPos) {
+        String treePos = currentPos;
+        for (ParseNodeDrawable parseNodeDrawable : list) {
+            WordNodePair current = convertParseNodeDrawableToWordNodePair(wordNodePairs, parseNodeDrawable);
+            if (current != null && current.getTreePos().equals("PP")) {
+                treePos = current.getTreePos();
+            }
+        }
+        for (String key : specialsMap.keySet()) {
+            for (int i = 0; i < specialsMap.get(key).size(); i++) {
+                WordNodePair current = convertParseNodeDrawableToWordNodePair(wordNodePairs, specialsMap.get(key).get(i));
+                if (current != null && current.getTreePos().equals("PP")) {
+                    treePos = current.getTreePos();
+                }
+            }
+        }
+        return treePos;
+    }
+
+    private WordNodePair convertParseNodeDrawableToWordNodePair(ArrayList<WordNodePair> wordNodePairs, ParseNodeDrawable parseNodeDrawable) {
         for (WordNodePair wordNodePair : wordNodePairs) {
             if (getParent(wordNodePair.getNode()).equals(getParent(parseNodeDrawable))) {
                 return wordNodePair;
@@ -252,7 +271,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         list.add(current);
         for (String key : specialsMap.keySet()) {
             for (int i = 0; i < specialsMap.get(key).size(); i++) {
-                WordNodePair node = convert(wordNodePairs, specialsMap.get(key).get(i));
+                WordNodePair node = convertParseNodeDrawableToWordNodePair(wordNodePairs, specialsMap.get(key).get(i));
                 if (node != null) {
                     list.add(node.getNo());
                 }
