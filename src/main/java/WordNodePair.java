@@ -20,7 +20,7 @@ public class WordNodePair {
         } else {
             parent = new ParseNodeDrawable(new Symbol(annotatedWord.getParse().getTreePos()));
         }
-        this.node = new ParseNodeDrawable(parent, annotatedWord.toString(), true, 0);
+        this.node = new ParseNodeDrawable(parent, annotatedWord.toString().replaceAll("\\(", "-LRB-").replaceAll("\\)", "-RRB-"), true, 0);
         parent.addChild(node);
         this.no = no;
         this.done = false;
