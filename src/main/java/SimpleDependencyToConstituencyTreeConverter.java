@@ -59,7 +59,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         return true;
     }
 
-    private void updateUnionCandidateLists(ArrayList<ParseNodeDrawable> list, WordNodePair wordNodePair, ArrayList<ParseNodeDrawable> punctuations, LinkedHashMap<String, ArrayList<ParseNodeDrawable>> specialsMap){
+    private void updateUnionCandidateLists(ArrayList<ParseNodeDrawable> list, WordNodePair wordNodePair, ArrayList<ParseNodeDrawable> punctuations, LinkedHashMap<String, ArrayList<ParseNodeDrawable>> specialsMap) {
         ParseNodeDrawable node = wordNodePair.getNode();
         String dependency1 = wordNodePair.getUniversalDependency();
         if (dependency1.equals("NSUBJ") || dependency1.equals("CSUBJ")) {
@@ -187,8 +187,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                     current.add(getParent(node));
                     current.addAll(unionList);
                     current.add(specialWord);
-                    ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(setTreePos(wordNodePairs, current, specialsMap, wordNodePairs.get(i).getTreePos())));
-                    addChildForSubject(parent, wordNodePairs, current, punctuations, i);
+                    addChildForSubject(setTreePos(wordNodePairs, current, specialsMap, wordNodePairs.get(i).getTreePos()), wordNodePairs, current, punctuations, i);
                 } else {
                     ArrayList<ParseNodeDrawable> current = new ArrayList<>();
                     current.add(getParent(node));
@@ -338,10 +337,10 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
             set.add(new Coordinates(j - 1, wordNodePairs.get(j - 1).getTo()));
             done = merge(wordNodePairs, specialsMap, unionList, punctuations, j - 1);
         }
-        if (!getParent(wordNodePairs.get(0).getNode()).getData().equals(new Symbol("S"))) {
-            getParent(wordNodePairs.get(0).getNode()).setData(new Symbol("S"));
+        ParseNodeDrawable root = getParent(wordNodePairs.get(0).getNode());
+        if (!root.getData().equals(new Symbol("S"))) {
+            root.setData(new Symbol("S"));
         }
-        ParseNodeDrawable root = setRoot(wordNodePairs);
         return new ParseTree(root);
     }
 
@@ -349,20 +348,9 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         return map.get(current).size() == total;
     }
 
-    private ParseNodeDrawable setRoot(ArrayList<WordNodePair> wordNodePairs) {
-        ParseNodeDrawable root;
-        ParseNodeDrawable parent = getParent(wordNodePairs.get(0).getNode());
-        if (parent.numberOfChildren() > 1) {
-            root = parent;
-        } else {
-            root = (ParseNodeDrawable) parent.getChild(0);
-            root.setData(new Symbol("S"));
-        }
-        return root;
-    }
-
-    private void addChildForSubject(ParseNodeDrawable parent, ArrayList<WordNodePair> wordNodePairs, ArrayList<ParseNodeDrawable> current, ArrayList<ParseNodeDrawable> punctuations, int index) {
-        ParseNodeDrawable grandParent = new ParseNodeDrawable(parent.getData());
+    private void addChildForSubject(String treePos, ArrayList<WordNodePair> wordNodePairs, ArrayList<ParseNodeDrawable> current, ArrayList<ParseNodeDrawable> punctuations, int index) {
+        ParseNodeDrawable parent = null;
+        ParseNodeDrawable grandParent = new ParseNodeDrawable(new Symbol(treePos));
         boolean check = false;
         boolean checkForSize = true;
         if (punctuations.size() == 0) {
@@ -375,6 +363,9 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                     if (check) {
                         if (i + 1 < wordNodePairs.size()) {
                             if (current.contains(getParent(parseNodeDrawable))) {
+                                if (parent == null) {
+                                    parent = new ParseNodeDrawable(new Symbol(treePos));
+                                }
                                 parent.addChild(getParent(parseNodeDrawable));
                             }
                         } else {
@@ -400,7 +391,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                 if (punctuations.contains(getParent(parseNodeDrawable))) {
                     if (check && punctuationCheck) {
                         punctuationCheck = false;
-                        if (checkForSize) {
+                        if (checkForSize && parent != null) {
                             grandParent.addChild(parent);
                         }
                     }
@@ -417,6 +408,9 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                             }
                         } else {
                             if (current.contains(getParent(parseNodeDrawable))) {
+                                if (parent == null) {
+                                    parent = new ParseNodeDrawable(new Symbol(treePos));
+                                }
                                 parent.addChild(getParent(parseNodeDrawable));
                             }
                         }
