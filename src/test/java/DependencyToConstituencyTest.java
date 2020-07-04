@@ -2,15 +2,15 @@ import AnnotatedSentence.AnnotatedCorpus;
 import AnnotatedSentence.AnnotatedSentence;
 import AnnotatedTree.ParseTreeDrawable;
 import ParseTree.ParseTree;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.Assert.assertEquals;
 
-class convertTest {
+class DependencyToConstituencyTest {
 
     @Test
     void testConvert() throws FileNotFoundException {
