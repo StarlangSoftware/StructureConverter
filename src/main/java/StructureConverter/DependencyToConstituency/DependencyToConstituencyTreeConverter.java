@@ -1,3 +1,5 @@
+package StructureConverter.DependencyToConstituency;
+
 import AnnotatedSentence.AnnotatedSentence;
 import ParseTree.ParseTree;
 

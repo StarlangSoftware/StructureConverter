@@ -1,3 +1,5 @@
+package StructureConverter;
+
 import AnnotatedSentence.AnnotatedWord;
 import AnnotatedTree.ParenthesisInLayerException;
 import AnnotatedTree.ParseNodeDrawable;

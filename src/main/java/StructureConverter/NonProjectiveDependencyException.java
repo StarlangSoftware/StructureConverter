@@ -1,3 +1,5 @@
+package StructureConverter;
+
 public class NonProjectiveDependencyException extends Exception {
 
     private String fileName;

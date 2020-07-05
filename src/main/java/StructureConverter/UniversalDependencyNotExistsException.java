@@ -1,3 +1,5 @@
+package StructureConverter;
+
 public class UniversalDependencyNotExistsException extends Exception {
 
     private String fileName;

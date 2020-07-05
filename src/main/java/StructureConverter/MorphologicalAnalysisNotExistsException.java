@@ -1,3 +1,5 @@
+package StructureConverter;
+
 public class MorphologicalAnalysisNotExistsException extends Exception {
 
     private String fileName;

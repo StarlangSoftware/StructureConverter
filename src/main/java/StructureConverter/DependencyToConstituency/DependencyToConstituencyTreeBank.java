@@ -1,3 +1,5 @@
+package StructureConverter.DependencyToConstituency;
+
 import AnnotatedSentence.AnnotatedCorpus;
 import AnnotatedSentence.AnnotatedSentence;
 import AnnotatedTree.TreeBankDrawable;

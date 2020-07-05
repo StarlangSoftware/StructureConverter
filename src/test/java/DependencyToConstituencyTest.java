@@ -1,6 +1,7 @@
 import AnnotatedSentence.AnnotatedCorpus;
 import AnnotatedSentence.AnnotatedSentence;
 import AnnotatedTree.ParseTreeDrawable;
+import StructureConverter.DependencyToConstituency.SimpleDependencyToConstituencyTreeConverter;
 import ParseTree.ParseTree;
 import org.junit.Test;
 

@@ -1,9 +1,12 @@
+package StructureConverter.DependencyToConstituency;
+
 import AnnotatedSentence.*;
 import AnnotatedTree.ParenthesisInLayerException;
 import AnnotatedTree.ParseNodeDrawable;
 import ParseTree.*;
 import ParseTree.ParseTree;
 import Dictionary.Word;
+import StructureConverter.*;
 
 import java.util.*;
 

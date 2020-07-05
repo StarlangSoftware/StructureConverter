@@ -1,3 +1,5 @@
+package StructureConverter;
+
 import java.util.Objects;
 
 public class Coordinates {
