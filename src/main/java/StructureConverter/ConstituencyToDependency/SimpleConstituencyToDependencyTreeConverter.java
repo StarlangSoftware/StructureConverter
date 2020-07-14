@@ -5,7 +5,6 @@ import AnnotatedTree.ParseNodeDrawable;
 import AnnotatedTree.ParseTreeDrawable;
 import AnnotatedTree.Processor.Condition.IsLeafNode;
 import AnnotatedTree.Processor.NodeDrawableCollector;
-import ParseTree.Symbol;
 import StructureConverter.WordNodePair;
 
 import java.util.ArrayList;
@@ -60,6 +59,8 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
                     default:
                         return "DEP";
                 }
+            case "NUM":
+                return "NUMMOD";
             default:
                 return "DEP";
         }
