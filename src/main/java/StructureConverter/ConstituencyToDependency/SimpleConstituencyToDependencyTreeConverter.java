@@ -5,6 +5,7 @@ import AnnotatedTree.ParseNodeDrawable;
 import AnnotatedTree.ParseTreeDrawable;
 import AnnotatedTree.Processor.Condition.IsLeafNode;
 import AnnotatedTree.Processor.NodeDrawableCollector;
+import ParseTree.Symbol;
 import StructureConverter.WordNodePair;
 
 import java.util.ArrayList;
@@ -111,6 +112,7 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
     }
 
     private void constructDependenciesFromTree(ArrayList<WordNodePair> wordNodePairList) {
+        setRoot(wordNodePairList);
         ArrayList<ParseNodeDrawable> parseNodeDrawableList = new ArrayList<>();
         ArrayList<WordNodePair> wordNodePairs = new ArrayList<>(wordNodePairList);
         for (WordNodePair wordNodePair : wordNodePairList) {
@@ -126,6 +128,20 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
                     wordNodePairs.add(wordNodePair);
                 }
             }
+        }
+    }
+
+    private void setRoot(ArrayList<WordNodePair> wordNodePairList) {
+        AnnotatedWord last = null;
+        for (int i = 0; i < wordNodePairList.size(); i++) {
+            WordNodePair wordNodePair = wordNodePairList.get(wordNodePairList.size() - i - 1);
+            if (!wordNodePair.getWord().isPunctuation()) {
+                last = wordNodePair.getWord();
+                break;
+            }
+        }
+        if (last != null) {
+            last.setUniversalDependency(0, "root");
         }
     }
 
