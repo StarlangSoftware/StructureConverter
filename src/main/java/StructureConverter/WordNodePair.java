@@ -28,6 +28,13 @@ public class WordNodePair {
         this.done = false;
     }
 
+    public WordNodePair(ParseNodeDrawable parseNodeDrawable, int no) {
+        this.node = parseNodeDrawable;
+        annotatedWord = new AnnotatedWord(parseNodeDrawable.getLayerData());
+        this.done = false;
+        this.no = no;
+    }
+
     public String getWordName() {
         return annotatedWord.getName();
     }
@@ -38,6 +45,14 @@ public class WordNodePair {
 
     public ParseNodeDrawable getNode(){
         return node;
+    }
+
+    public AnnotatedWord getWord() {
+        return annotatedWord;
+    }
+
+    public void updateNode(){
+        node = (ParseNodeDrawable) node.getParent();
     }
 
     public int getTo() {

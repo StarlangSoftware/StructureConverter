@@ -1,4 +1,4 @@
-package StructureConverter;
+package StructureConverter.DependencyToConstituency;
 
 public class UniversalDependencyNotExistsException extends Exception {
 

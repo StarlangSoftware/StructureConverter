@@ -1,4 +1,4 @@
-package StructureConverter;
+package StructureConverter.DependencyToConstituency;
 
 public class MorphologicalAnalysisNotExistsException extends Exception {
 

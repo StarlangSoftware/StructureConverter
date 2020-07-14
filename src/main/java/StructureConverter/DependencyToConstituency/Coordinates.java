@@ -1,4 +1,4 @@
-package StructureConverter;
+package StructureConverter.DependencyToConstituency;
 
 import java.util.Objects;
 
