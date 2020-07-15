@@ -67,6 +67,13 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
     }
 
     private void setToAndAddUniversalDependency(int index, int currentIndex, ArrayList<WordNodePair> wordNodePairList) {
+        if (wordNodePairList.get(currentIndex).getWord().isPunctuation()) {
+            WordNodePair temporary = wordNodePairList.get(currentIndex);
+            int current = findLast(wordNodePairList, index, currentIndex);
+            WordNodePair wordNodePair = wordNodePairList.get(current);
+            wordNodePairList.set(currentIndex, wordNodePair);
+            wordNodePairList.set(current, temporary);
+        }
         for (int i = index; i < currentIndex; i++) {
             wordNodePairList.get(i).done();
             wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(currentIndex).getNo(), findData(wordNodePairList.get(i).getNode().getData().getName(), wordNodePairList.get(currentIndex).getNode().getData().getName(), wordNodePairList.get(i).getNode().getData().isPunctuation(), wordNodePairList.get(currentIndex).getNode().getData().isPunctuation()));
@@ -79,34 +86,29 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
         }
     }
 
-    private boolean allEquals(ArrayList<ParseNodeDrawable> parseNodeDrawableList) {
+    /*private boolean allEquals(ArrayList<ParseNodeDrawable> parseNodeDrawableList) {
         for (int i = 0; i < parseNodeDrawableList.size() - 1; i++) {
             if (!parseNodeDrawableList.get(i).equals(parseNodeDrawableList.get(i + 1))) {
                 return false;
             }
         }
         return true;
-    }
+    }*/
 
-    private int findLast(ArrayList<WordNodePair> wordNodePairList) {
-        int index = -1;
-        for (int i = 0; i < wordNodePairList.size(); i++) {
-            if (!wordNodePairList.get(wordNodePairList.size() - i - 1).getWord().isPunctuation()) {
-                index = wordNodePairList.size() - i - 1;
+    private int findLast(ArrayList<WordNodePair> wordNodePairList, int index, int currentIndex) {
+        int nodeIndex = -1;
+        int iterate = 0;
+        for (int i = index; i < currentIndex; i++) {
+            if (!wordNodePairList.get(currentIndex - iterate - 1).getWord().isPunctuation()) {
+                nodeIndex = currentIndex - iterate - 1;
                 break;
             }
+            iterate++;
         }
-        return index;
+        return nodeIndex;
     }
 
     private void addUniversalDependency(ArrayList<ParseNodeDrawable> parseNodeDrawableList, ArrayList<WordNodePair> wordNodePairList) {
-        if (allEquals(parseNodeDrawableList) && wordNodePairList.get(wordNodePairList.size() - 1).getWord().isPunctuation()) {
-            WordNodePair temporary = wordNodePairList.get(wordNodePairList.size() - 1);
-            int index = findLast(wordNodePairList);
-            WordNodePair wordNodePair = wordNodePairList.get(index);
-            wordNodePairList.set(wordNodePairList.size() - 1, wordNodePair);
-            wordNodePairList.set(index, temporary);
-        }
         for (int i = 0; i < parseNodeDrawableList.size() - 1; i++) {
             if (parseNodeDrawableList.get(i).equals(parseNodeDrawableList.get(i + 1))) {
                 int currentIndex = 0;
@@ -173,6 +175,7 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
                 if (wordNodePair.getNode().getParent() != null && wordNodePair.getNode().getParent().numberOfChildren() == 1) {
                     wordNodePair.updateNode();
                     System.out.println("check this");
+                    return null;
                 }
                 annotatedSentence.addWord(wordNodePair.getWord());
                 wordNodePairList.add(wordNodePair);
