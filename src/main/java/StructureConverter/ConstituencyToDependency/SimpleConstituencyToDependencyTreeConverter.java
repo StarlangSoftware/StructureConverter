@@ -86,15 +86,6 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
         }
     }
 
-    /*private boolean allEquals(ArrayList<ParseNodeDrawable> parseNodeDrawableList) {
-        for (int i = 0; i < parseNodeDrawableList.size() - 1; i++) {
-            if (!parseNodeDrawableList.get(i).equals(parseNodeDrawableList.get(i + 1))) {
-                return false;
-            }
-        }
-        return true;
-    }*/
-
     private int findLast(ArrayList<WordNodePair> wordNodePairList, int index, int currentIndex) {
         int nodeIndex = -1;
         int iterate = 0;
