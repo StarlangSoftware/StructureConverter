@@ -88,11 +88,24 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
         return true;
     }
 
+    private int findLast(ArrayList<WordNodePair> wordNodePairList) {
+        int index = -1;
+        for (int i = 0; i < wordNodePairList.size(); i++) {
+            if (!wordNodePairList.get(wordNodePairList.size() - i - 1).getWord().isPunctuation()) {
+                index = wordNodePairList.size() - i - 1;
+                break;
+            }
+        }
+        return index;
+    }
+
     private void addUniversalDependency(ArrayList<ParseNodeDrawable> parseNodeDrawableList, ArrayList<WordNodePair> wordNodePairList) {
         if (allEquals(parseNodeDrawableList) && wordNodePairList.get(wordNodePairList.size() - 1).getWord().isPunctuation()) {
             WordNodePair temporary = wordNodePairList.get(wordNodePairList.size() - 1);
-            wordNodePairList.set(wordNodePairList.size() - 1, wordNodePairList.get(wordNodePairList.size() - 2));
-            wordNodePairList.set(wordNodePairList.size() - 2, temporary);
+            int index = findLast(wordNodePairList);
+            WordNodePair wordNodePair = wordNodePairList.get(index);
+            wordNodePairList.set(wordNodePairList.size() - 1, wordNodePair);
+            wordNodePairList.set(index, temporary);
         }
         for (int i = 0; i < parseNodeDrawableList.size() - 1; i++) {
             if (parseNodeDrawableList.get(i).equals(parseNodeDrawableList.get(i + 1))) {
