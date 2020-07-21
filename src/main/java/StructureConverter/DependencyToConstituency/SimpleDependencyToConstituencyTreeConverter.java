@@ -373,7 +373,9 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                             }
                         } else {
                             checkForSize = false;
-                            grandParent.addChild(getParent(parseNodeDrawable));
+                            if (current.contains(getParent(parseNodeDrawable))) {
+                                grandParent.addChild(getParent(parseNodeDrawable));
+                            }
                         }
                     } else {
                         if (current.contains(getParent(parseNodeDrawable))) {
