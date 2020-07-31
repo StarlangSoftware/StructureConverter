@@ -389,17 +389,16 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                 grandParent.addChild(parent);
             }
         } else {
-            boolean punctuationCheck = true;
+            int punctuationCheck = setPunctuationCheck(wordNodePairs);
             for (int i = 0; i < wordNodePairs.size(); i++) {
                 WordNodePair wordNodePair = wordNodePairs.get(i);
                 ParseNodeDrawable parseNodeDrawable = wordNodePair.getNode();
-                if (punctuations.contains(getParent(parseNodeDrawable))) {
-                    if (check && punctuationCheck) {
-                        punctuationCheck = false;
-                        if (checkForSize && parent != null) {
-                            grandParent.addChild(parent);
-                        }
+                if (i == punctuationCheck + 1) {
+                    if (!containsChild(grandParent, parent) && parent != null) {
+                        grandParent.addChild(parent);
                     }
+                }
+                if (punctuations.contains(getParent(parseNodeDrawable))) {
                     grandParent.addChild(getParent(parseNodeDrawable));
                 } else if (getParent(parseNodeDrawable).equals(specialWord)) {
                     grandParent.addChild(specialWord);
@@ -409,7 +408,6 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                         if (controlForSpecial(wordNodePairs, index, current)) {
                             if (current.contains(getParent(parseNodeDrawable))) {
                                 grandParent.addChild(getParent(parseNodeDrawable));
-                                checkForSize = false;
                             }
                         } else {
                             if (current.contains(getParent(parseNodeDrawable))) {
@@ -427,6 +425,26 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                 }
             }
         }
+    }
+
+    private int setPunctuationCheck(ArrayList<WordNodePair> wordNodePairs) {
+        int check = 0;
+        for (int i = 0; i < wordNodePairs.size(); i++) {
+            if (!wordNodePairs.get(wordNodePairs.size() - i - 1).getWord().isPunctuation()) {
+                check = wordNodePairs.size() - i - 1;
+                break;
+            }
+        }
+        return check;
+    }
+
+    private boolean containsChild(ParseNodeDrawable parseNodeDrawable, ParseNodeDrawable parent) {
+        for (int i = 0; i < parseNodeDrawable.numberOfChildren(); i++) {
+            if (parseNodeDrawable.getChild(i).equals(parent)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean controlForSpecial(ArrayList<WordNodePair> wordNodePairs, int index, ArrayList<ParseNodeDrawable> current) {
