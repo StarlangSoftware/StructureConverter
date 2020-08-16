@@ -6,8 +6,11 @@ import AnnotatedTree.ParseTreeDrawable;
 import AnnotatedTree.Processor.Condition.IsLeafNode;
 import AnnotatedTree.Processor.NodeDrawableCollector;
 import StructureConverter.WordNodePair;
+import Util.Tuple;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 
 public class SimpleConstituencyToDependencyTreeConverter implements ConstituencyToDependencyTreeConverter {
 
@@ -66,17 +69,19 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
         }
     }
 
-    private void setToAndAddUniversalDependency(int index, int currentIndex, ArrayList<WordNodePair> wordNodePairList) {
+    private void setToAndAddUniversalDependency(int startIndex, int currentIndex, ArrayList<WordNodePair> wordNodePairList, int finishIndex) {
         if (wordNodePairList.get(currentIndex).getWord().isPunctuation()) {
             WordNodePair temporary = wordNodePairList.get(currentIndex);
-            int current = findLast(wordNodePairList, index, currentIndex);
+            int current = findLast(wordNodePairList, startIndex, currentIndex);
             WordNodePair wordNodePair = wordNodePairList.get(current);
             wordNodePairList.set(currentIndex, wordNodePair);
             wordNodePairList.set(current, temporary);
         }
-        for (int i = index; i < currentIndex; i++) {
-            wordNodePairList.get(i).done();
-            wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(currentIndex).getNo(), findData(wordNodePairList.get(i).getNode().getData().getName(), wordNodePairList.get(currentIndex).getNode().getData().getName(), wordNodePairList.get(i).getNode().getData().isPunctuation(), wordNodePairList.get(currentIndex).getNode().getData().isPunctuation()));
+        for (int i = startIndex; i < finishIndex; i++) {
+            if (i != currentIndex) {
+                wordNodePairList.get(i).done();
+                wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(currentIndex).getNo(), findData(wordNodePairList.get(i).getNode().getData().getName(), wordNodePairList.get(currentIndex).getNode().getData().getName(), wordNodePairList.get(i).getNode().getData().isPunctuation(), wordNodePairList.get(currentIndex).getNode().getData().isPunctuation()));
+            }
         }
         if (wordNodePairList.get(currentIndex).getNode().getParent() != null) {
             wordNodePairList.get(currentIndex).updateNode();
@@ -99,19 +104,78 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
         return nodeIndex;
     }
 
+    private LinkedHashMap<HashSet<String>, Integer> setMap() {
+        LinkedHashMap<HashSet<String>, Integer> map = new LinkedHashMap<>();
+        HashSet<String> set = new HashSet<>();
+        set.add("PUNCT");
+        map.put((HashSet<String>) set.clone(), null);
+        set.clear();
+        set.add("VP");
+        set.add("NOMP");
+        map.put((HashSet<String>) set.clone(), null);
+        set.clear();
+        set.add("NP");
+        set.add("S");
+        map.put((HashSet<String>) set.clone(), null);
+        set.clear();
+        set.add("ADJP");
+        set.add("ADVP");
+        map.put((HashSet<String>) set.clone(), null);
+        set.clear();
+        set.add("DT");
+        set.add("NUM");
+        map.put((HashSet<String>) set.clone(), null);
+        set.clear();
+        set.add("QP");
+        set.add("PP");
+        set.add("NEG");
+        set.add("CONJP");
+        set.add("INTJ");
+        set.add("WP");
+        map.put((HashSet<String>) set.clone(), null);
+        return map;
+    }
+
+    private Tuple findNodeIndex(int start, ArrayList<ParseNodeDrawable> parseNodeDrawableList) {
+        LinkedHashMap<HashSet<String>, Integer> map = setMap();
+        int last = parseNodeDrawableList.size() - 1;
+        int currentIndex = 0;
+        for (int i = start; i < parseNodeDrawableList.size() - 1; i++) {
+            if (parseNodeDrawableList.get(i).equals(parseNodeDrawableList.get(i + 1))) {
+                for (HashSet<String> set : map.keySet()) {
+                    if (parseNodeDrawableList.get(i + 1).getParent() != null) {
+                        if (set.contains(parseNodeDrawableList.get(i + 1).getParent().getData().getName())) {
+                            map.put(set, i + 1);
+                            break;
+                        }
+                    } else {
+                        if (set.contains(parseNodeDrawableList.get(i + 1).getData().getName())) {
+                            map.put(set, i + 1);
+                            break;
+                        }
+                    }
+                }
+            } else {
+                last = i;
+                break;
+            }
+        }
+        for (HashSet<String> set : map.keySet()) {
+            if (map.get(set) != null) {
+                currentIndex = map.get(set);
+                break;
+            }
+        }
+        return new Tuple(currentIndex, last);
+    }
+
     private void addUniversalDependency(ArrayList<ParseNodeDrawable> parseNodeDrawableList, ArrayList<WordNodePair> wordNodePairList) {
         for (int i = 0; i < parseNodeDrawableList.size() - 1; i++) {
             if (parseNodeDrawableList.get(i).equals(parseNodeDrawableList.get(i + 1))) {
-                int currentIndex = 0;
-                for (int k = i; k < parseNodeDrawableList.size(); k++) {
-                    if (k + 1 < parseNodeDrawableList.size() && parseNodeDrawableList.get(k).equals(parseNodeDrawableList.get(k + 1))) {
-                        currentIndex = k + 1;
-                    } else {
-                        break;
-                    }
-                }
+                Tuple tuple = findNodeIndex(i, parseNodeDrawableList);
+                int currentIndex = tuple.getFirst();
                 if (currentIndex - i + 1 == parseNodeDrawableList.get(i).numberOfChildren()) {
-                    setToAndAddUniversalDependency(i, currentIndex, wordNodePairList);
+                    setToAndAddUniversalDependency(i, currentIndex, wordNodePairList, tuple.getLast());
                     break;
                 }
             }
