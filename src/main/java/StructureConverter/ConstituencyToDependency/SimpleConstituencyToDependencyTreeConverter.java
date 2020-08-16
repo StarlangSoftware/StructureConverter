@@ -6,12 +6,9 @@ import AnnotatedTree.ParseTreeDrawable;
 import AnnotatedTree.Processor.Condition.IsLeafNode;
 import AnnotatedTree.Processor.NodeDrawableCollector;
 import StructureConverter.WordNodePair;
-import Util.Tuple;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 
 public class SimpleConstituencyToDependencyTreeConverter implements ConstituencyToDependencyTreeConverter {
 
@@ -85,19 +82,6 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
         }
     }
 
-    private int findLast(ArrayList<WordNodePair> wordNodePairList, int index, int currentIndex) {
-        int nodeIndex = -1;
-        int iterate = 0;
-        for (int i = index; i < currentIndex; i++) {
-            if (!wordNodePairList.get(currentIndex - iterate - 1).getWord().isPunctuation()) {
-                nodeIndex = currentIndex - iterate - 1;
-                break;
-            }
-            iterate++;
-        }
-        return nodeIndex;
-    }
-
     private HashMap<String, Integer> setMap() {
         HashMap<String, Integer> set = new HashMap<>();
         set.put("PUNCT", 0);
@@ -120,7 +104,7 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
 
     private int findEndingNode(int start, ArrayList<WordNodePair> wordNodePairList){
         int i = start + 1;
-        while (i < wordNodePairList.size() - 1 && wordNodePairList.get(i).getNode().getParent().equals(wordNodePairList.get(i + 1).getNode().getParent())){
+        while (i < wordNodePairList.size() - 1 && wordNodePairList.get(i).getNode().getParent().equals(wordNodePairList.get(i + 1).getNode().getParent())) {
             i++;
         }
         return i;
@@ -137,7 +121,7 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
         HashMap<String, Integer> map = setMap();
         int bestPriority = getPriority(map, wordNodePairList.get(last).getNode().getData().getName());
         int currentIndex = last;
-        for (int i = last - 1; i >= start; i--){
+        for (int i = last - 1; i >= start; i--) {
             int priority = getPriority(map, wordNodePairList.get(i).getNode().getData().getName());
             if (priority < bestPriority){
                 bestPriority = priority;
