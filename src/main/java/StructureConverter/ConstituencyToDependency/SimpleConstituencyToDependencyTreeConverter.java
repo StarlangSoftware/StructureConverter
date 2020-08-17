@@ -5,6 +5,7 @@ import AnnotatedTree.ParseNodeDrawable;
 import AnnotatedTree.ParseTreeDrawable;
 import AnnotatedTree.Processor.Condition.IsLeafNode;
 import AnnotatedTree.Processor.NodeDrawableCollector;
+import Dictionary.Word;
 import StructureConverter.WordNodePair;
 
 import java.util.ArrayList;
@@ -67,11 +68,21 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
         }
     }
 
-    private void setToAndAddUniversalDependency(int startIndex, int currentIndex, ArrayList<WordNodePair> wordNodePairList, int finishIndex) {
+    private void setToAndAddUniversalDependency(int startIndex, int currentIndex, ArrayList<WordNodePair> wordNodePairList, int finishIndex, ParseNodeDrawable parent) {
         for (int i = startIndex; i <= finishIndex; i++) {
             if (i != currentIndex) {
                 wordNodePairList.get(i).done();
-                wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(currentIndex).getNo(), findData(wordNodePairList.get(i).getNode().getData().getName(), wordNodePairList.get(currentIndex).getNode().getData().getName(), wordNodePairList.get(i).getNode().getData().isPunctuation(), wordNodePairList.get(currentIndex).getNode().getData().isPunctuation()));
+                if (parent.numberOfChildren() == 2 && parent.getData().getName().equals("S") && parent.getChild(0).getData().getName().equals("NP") && parent.getChild(1).getData().getName().equals("VP")) {
+                    wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(currentIndex).getNo(), "NSUBJ");
+                } else if (parent.numberOfChildren() == 3 && parent.getData().getName().equals("S") && parent.getChild(0).getData().getName().equals("NP") && parent.getChild(1).getData().getName().equals("VP") && Word.isPunctuation(parent.getChild(2).getData().getName())) {
+                    if (!wordNodePairList.get(i).getWord().isPunctuation()) {
+                        wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(currentIndex).getNo(), "NSUBJ");
+                    } else {
+                        wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(currentIndex).getNo(), "PUNCT");
+                    }
+                } else {
+                    wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(currentIndex).getNo(), findData(wordNodePairList.get(i).getNode().getData().getName(), wordNodePairList.get(currentIndex).getNode().getData().getName(), wordNodePairList.get(i).getNode().getData().isPunctuation(), wordNodePairList.get(currentIndex).getNode().getData().isPunctuation()));
+                }
             }
         }
         if (wordNodePairList.get(currentIndex).getNode().getParent() != null) {
@@ -102,7 +113,7 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
         return set;
     }
 
-    private int findEndingNode(int start, ArrayList<WordNodePair> wordNodePairList){
+    private int findEndingNode(int start, ArrayList<WordNodePair> wordNodePairList) {
         int i = start + 1;
         while (i < wordNodePairList.size() - 1 && wordNodePairList.get(i).getNode().getParent().equals(wordNodePairList.get(i + 1).getNode().getParent())) {
             i++;
@@ -131,13 +142,40 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
         return currentIndex;
     }
 
+    private WordNodePair convertParseNodeDrawableToWordNodePair(ParseNodeDrawable parseNodeDrawable, ArrayList<WordNodePair> wordNodePairList) {
+        for (WordNodePair wordNodePair : wordNodePairList) {
+            if (wordNodePair.getNode().equals(parseNodeDrawable)) {
+                return wordNodePair;
+            }
+        }
+        return null;
+    }
+
     private void addUniversalDependency(ArrayList<ParseNodeDrawable> parseNodeDrawableList, ArrayList<WordNodePair> wordNodePairList) {
         for (int i = 0; i < parseNodeDrawableList.size() - 1; i++) {
             if (parseNodeDrawableList.get(i).equals(parseNodeDrawableList.get(i + 1))) {
                 int last = findEndingNode(i, wordNodePairList);
-                if (last - i + 1 == parseNodeDrawableList.get(i).numberOfChildren()){
-                    int currentIndex = findNodeIndex(i, last, wordNodePairList);
-                    setToAndAddUniversalDependency(i, currentIndex, wordNodePairList, last);
+                if (last - i + 1 == parseNodeDrawableList.get(i).numberOfChildren()) {
+                    if (parseNodeDrawableList.get(i).numberOfChildren() == 3 && parseNodeDrawableList.get(i).getChild(1).getData().getName().equals("CONJP")) {
+                        WordNodePair first = convertParseNodeDrawableToWordNodePair((ParseNodeDrawable) parseNodeDrawableList.get(i).getChild(0), wordNodePairList);
+                        WordNodePair second = convertParseNodeDrawableToWordNodePair((ParseNodeDrawable) parseNodeDrawableList.get(i).getChild(1), wordNodePairList);
+                        WordNodePair third = convertParseNodeDrawableToWordNodePair((ParseNodeDrawable) parseNodeDrawableList.get(i).getChild(2), wordNodePairList);
+                        if (first != null && second != null && third != null) {
+                            second.done();
+                            third.done();
+                            second.getWord().setUniversalDependency(third.getNo(), "CC");
+                            third.getWord().setUniversalDependency(first.getNo(), "CONJ");
+                            if (first.getNode().getParent() != null) {
+                                first.updateNode();
+                                if (first.getNode().getParent() != null && first.getNode().getParent().numberOfChildren() == 1) {
+                                    first.updateNode();
+                                }
+                            }
+                        }
+                    } else {
+                        int currentIndex = findNodeIndex(i, last, wordNodePairList);
+                        setToAndAddUniversalDependency(i, currentIndex, wordNodePairList, last, parseNodeDrawableList.get(i));
+                    }
                     break;
                 }
             }
