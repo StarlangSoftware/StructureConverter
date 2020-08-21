@@ -31,17 +31,14 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
                             return "ACL";
                         }
                         return "AMOD";
-                    case "VP":
-                        return "ADVMOD";
-                    default:
-                        return "DEP";
                 }
+                return "ADVMOD";
             case "PP":
                 switch (head) {
                     case "NP":
                         return "CASE";
                     default:
-                        return "DEP";
+                        return "ADVMOD";
                 }
             case "DP":
                 return "DET";
@@ -63,9 +60,8 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
                             return "OBJ";
                         }
                         return "OBL";
-                    default:
-                        return "DEP";
                 }
+                return "NMOD";
             case "S":
                 switch (head) {
                     case "VP":
@@ -74,10 +70,6 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
                         return "DEP";
                 }
             case "NUM":
-                switch (head) {
-                    case "NUM":
-                        return "COMPOUND";
-                }
                 return "NUMMOD";
             case "INTJ":
                 return "DISCOURSE";
@@ -103,7 +95,7 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
                 if (parent.numberOfChildren() > 2){
                     thirdChild = parent.getChild(2).getData().getName();
                 }
-                if (parent.numberOfChildren() == 2 && parentData.equals("S") && firstChild.equals("NP") && secondChild.equals("VP")) {
+                if (parent.numberOfChildren() == 2 && parentData.equals("S") && firstChild.equals("NP")) {
                     if (wordNodePairList.get(headIndex).getWord().getParse().containsTag(MorphologicalTag.PASSIVE)) {
                         wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(headIndex).getNo(), "NSUBJPASS");
                     } else {
