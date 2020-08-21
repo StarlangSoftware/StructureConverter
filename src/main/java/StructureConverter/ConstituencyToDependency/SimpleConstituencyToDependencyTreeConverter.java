@@ -6,6 +6,7 @@ import AnnotatedTree.ParseTreeDrawable;
 import AnnotatedTree.Processor.Condition.IsLeafNode;
 import AnnotatedTree.Processor.NodeDrawableCollector;
 import Dictionary.Word;
+import MorphologicalAnalysis.MorphologicalTag;
 import StructureConverter.WordNodePair;
 
 import java.util.ArrayList;
@@ -13,82 +14,124 @@ import java.util.HashMap;
 
 public class SimpleConstituencyToDependencyTreeConverter implements ConstituencyToDependencyTreeConverter {
 
-    private String findData(String data1, String data2, boolean condition1, boolean condition2) {
+    private String findData(String dependent, String head, boolean condition1, boolean condition2, AnnotatedWord dependentWord, AnnotatedWord headWord) {
         if (condition1 || condition2) {
             return "PUNCT";
         }
-        switch (data1) {
+        switch (dependent) {
             case "ADVP":
-                switch (data2) {
-                    case "VP":
+                if (dependentWord.getParse().getRootPos().equals("VERB")) {
+                    return "ADVCL";
+                }
+                return "ADVMOD";
+            case "ADJP":
+                switch (head) {
                     case "NP":
+                        if (dependentWord.getParse().getRootPos().equals("VERB")) {
+                            return "ACL";
+                        }
+                        return "AMOD";
+                    case "VP":
                         return "ADVMOD";
                     default:
                         return "DEP";
                 }
-            case "ADJP":
-                switch (data2) {
-                    case "NP":
-                        return "AMOD";
-                    default:
-                        return "DEP";
-                }
             case "PP":
-                switch (data2) {
+                switch (head) {
                     case "NP":
                         return "CASE";
                     default:
                         return "DEP";
                 }
             case "DP":
-                switch (data2) {
-                    case "NP":
-                        return "DET";
-                    default:
-                        return "DEP";
-                }
+                return "DET";
             case "NP":
-                switch (data2) {
+                switch (head) {
                     case "NP":
+                        if (dependentWord.getParse().containsTag(MorphologicalTag.PROPERNOUN) && headWord.getParse().containsTag(MorphologicalTag.PROPERNOUN)) {
+                            return "FLAT";
+                        }
+                        if (dependentWord.getSemantic() != null && headWord.getSemantic() != null && dependentWord.getSemantic().equals(headWord.getSemantic())) {
+                            return "COMPOUND";
+                        }
                         return "NMOD";
+                    case "VP":
+                        if (dependentWord.getSemantic() != null && headWord.getSemantic() != null && dependentWord.getSemantic().equals(headWord.getSemantic())) {
+                            return "COMPOUND";
+                        }
+                        if (dependentWord.getParse().containsTag(MorphologicalTag.NOMINATIVE) || dependentWord.getParse().containsTag(MorphologicalTag.ACCUSATIVE)) {
+                            return "OBJ";
+                        }
+                        return "OBL";
                     default:
                         return "DEP";
                 }
             case "S":
-                switch (data2) {
+                switch (head) {
                     case "VP":
-                        return "ACL";
+                        return "CCOMP";
                     default:
                         return "DEP";
                 }
             case "NUM":
+                switch (head) {
+                    case "NUM":
+                        return "COMPOUND";
+                }
                 return "NUMMOD";
+            case "INTJ":
+                return "DISCOURSE";
+            case "NEG":
+                return "NEG";
+            case "CONJP":
+                return "CC";
             default:
                 return "DEP";
         }
     }
 
-    private void setToAndAddUniversalDependency(int startIndex, int currentIndex, ArrayList<WordNodePair> wordNodePairList, int finishIndex, ParseNodeDrawable parent) {
+    private void setToAndAddUniversalDependency(int startIndex, int headIndex, ArrayList<WordNodePair> wordNodePairList, int finishIndex, ParseNodeDrawable parent) {
         for (int i = startIndex; i <= finishIndex; i++) {
-            if (i != currentIndex) {
+            if (i != headIndex) {
                 wordNodePairList.get(i).done();
-                if (parent.numberOfChildren() == 2 && parent.getData().getName().equals("S") && parent.getChild(0).getData().getName().equals("NP") && parent.getChild(1).getData().getName().equals("VP")) {
-                    wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(currentIndex).getNo(), "NSUBJ");
-                } else if (parent.numberOfChildren() == 3 && parent.getData().getName().equals("S") && parent.getChild(0).getData().getName().equals("NP") && parent.getChild(1).getData().getName().equals("VP") && Word.isPunctuation(parent.getChild(2).getData().getName())) {
-                    if (!wordNodePairList.get(i).getWord().isPunctuation()) {
-                        wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(currentIndex).getNo(), "NSUBJ");
+                String parentData = parent.getData().getName();
+                String firstChild = parent.getChild(0).getData().getName();
+                String secondChild = null, thirdChild = null;
+                if (parent.numberOfChildren() > 1){
+                    secondChild = parent.getChild(1).getData().getName();
+                }
+                if (parent.numberOfChildren() > 2){
+                    thirdChild = parent.getChild(2).getData().getName();
+                }
+                if (parent.numberOfChildren() == 2 && parentData.equals("S") && firstChild.equals("NP") && secondChild.equals("VP")) {
+                    if (wordNodePairList.get(headIndex).getWord().getParse().containsTag(MorphologicalTag.PASSIVE)) {
+                        wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(headIndex).getNo(), "NSUBJPASS");
                     } else {
-                        wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(currentIndex).getNo(), "PUNCT");
+                        wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(headIndex).getNo(), "NSUBJ");
+                    }
+                } else if (parent.numberOfChildren() == 3 && parentData.equals("S") && firstChild.equals("NP") && secondChild.equals("VP") && Word.isPunctuation(thirdChild)) {
+                    if (!wordNodePairList.get(i).getWord().isPunctuation()) {
+                        if (wordNodePairList.get(headIndex).getWord().getParse().containsTag(MorphologicalTag.PASSIVE)) {
+                            wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(headIndex).getNo(), "NSUBJPASS");
+                        } else {
+                            wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(headIndex).getNo(), "NSUBJ");
+                        }
+                    } else {
+                        wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(headIndex).getNo(), "PUNCT");
                     }
                 } else {
-                    wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(currentIndex).getNo(), findData(wordNodePairList.get(i).getNode().getData().getName(), wordNodePairList.get(currentIndex).getNode().getData().getName(), wordNodePairList.get(i).getNode().getData().isPunctuation(), wordNodePairList.get(currentIndex).getNode().getData().isPunctuation()));
+                    String dependent = wordNodePairList.get(i).getNode().getData().getName();
+                    String head = wordNodePairList.get(headIndex).getNode().getData().getName();
+                    boolean condition1 = wordNodePairList.get(i).getNode().getData().isPunctuation();
+                    boolean condition2 = wordNodePairList.get(headIndex).getNode().getData().isPunctuation();
+                    wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(headIndex).getNo(), findData(dependent, head, condition1, condition2, wordNodePairList.get(i).getWord(), wordNodePairList.get(headIndex).getWord()));
                 }
             }
         }
-        if (wordNodePairList.get(currentIndex).getNode().getParent() != null) {
-            wordNodePairList.get(currentIndex).updateNode();
-            if (wordNodePairList.get(currentIndex).getNode().getParent() != null && wordNodePairList.get(currentIndex).getNode().getParent().numberOfChildren() == 1) {
-                wordNodePairList.get(currentIndex).updateNode();
+        if (wordNodePairList.get(headIndex).getNode().getParent() != null) {
+            wordNodePairList.get(headIndex).updateNode();
+            if (wordNodePairList.get(headIndex).getNode().getParent() != null && wordNodePairList.get(headIndex).getNode().getParent().numberOfChildren() == 1) {
+                wordNodePairList.get(headIndex).updateNode();
             }
         }
     }
