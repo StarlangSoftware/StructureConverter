@@ -133,14 +133,14 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
         set.put("PUNCT", 0);
         set.put("VP", 1);
         set.put("NOMP", 1);
-        set.put("NP", 2);
         set.put("S", 2);
-        set.put("ADJP", 3);
-        set.put("ADVP", 3);
+        set.put("NP", 2);
+        set.put("ADJP", 2);
+        set.put("ADVP", 2);
+        set.put("PP", 3);
         set.put("DP", 4);
         set.put("NUM", 4);
         set.put("QP", 5);
-        set.put("PP", 5);
         set.put("NEG", 5);
         set.put("CONJP", 5);
         set.put("INTJ", 5);
