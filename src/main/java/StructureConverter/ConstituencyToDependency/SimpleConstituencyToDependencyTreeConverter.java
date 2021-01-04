@@ -20,51 +20,99 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
         }
         switch (dependent) {
             case "ADVP":
+                /**
+                 * If an ADVP node has a verbal head, then it is linked to the VP head within its clause with the tag ADVCL.
+                 */
                 if (dependentWord.getParse().getRootPos().equals("VERB")) {
                     return "ADVCL";
                 }
+                /**
+                 * If an ADVP node does not have a verbal head, it is linked to either the head of the following ADJP or to the root VP head with the ADVMOD.
+                 */
                 return "ADVMOD";
             case "ADJP":
                 switch (head) {
                     case "NP":
+                        /**
+                         * If an NP has an ADJP sister node before it and if the head of ADJP is verbal, then the head of ADJP is linked to the head of NP with the tag ACL.
+                         */
                         if (dependentWord.getParse().getRootPos().equals("VERB")) {
                             return "ACL";
                         }
+                        /**
+                         * If an NP has an ADJP sister node before it and the head of ADJP is not verbal, then the head of ADJP is linked to the head of NP with the tag AMOD.
+                         */
                         return "AMOD";
                 }
+                /**
+                 * If an ADVP node does not have a verbal head, it is linked to either the head of the following ADJP or to the root VP head with the ADVMOD.
+                 */
                 return "ADVMOD";
             case "PP":
                 switch (head) {
                     case "NP":
+                        /**
+                         * The head of a PP node is linked to the head of the previous phrase with the tag CASE.
+                         */
                         return "CASE";
                     default:
+                        /**
+                         * If an ADVP node does not have a verbal head, it is linked to either the head of the following ADJP or to the root VP head with the ADVMOD.
+                         */
                         return "ADVMOD";
                 }
             case "DP":
+                /**
+                 * DP nodes are linked to the head of the following NP with the tag DET.
+                 */
                 return "DET";
             case "NP":
                 switch (head) {
                     case "NP":
+                        /**
+                         * The foreign words and proper names found under an NP node are linked to the head of the phrase with the tag FLAT.
+                         */
                         if (dependentWord.getParse().containsTag(MorphologicalTag.PROPERNOUN) && headWord.getParse().containsTag(MorphologicalTag.PROPERNOUN)) {
                             return "FLAT";
                         }
+                        /**
+                         * If the daughters of a node are found together on WordNet, then the left node is linked to the right node with the tag COMPOUND. If a NUM node has two daughters which are also labeled as NUM, then the left daughter is linked to the right one with the tag COMPOUND.
+                         */
                         if (dependentWord.getSemantic() != null && headWord.getSemantic() != null && dependentWord.getSemantic().equals(headWord.getSemantic())) {
                             return "COMPOUND";
                         }
+                        /**
+                         * In NP sequences, each word is linked to the rightmost NP with the tag NMOD.
+                         */
                         return "NMOD";
                     case "VP":
+                        /**
+                         * If the daughters of a node are found together on WordNet, then the left node is linked to the right node with the tag COMPOUND. If a NUM node has two daughters which are also labeled as NUM, then the left daughter is linked to the right one with the tag COMPOUND.
+                         */
                         if (dependentWord.getSemantic() != null && headWord.getSemantic() != null && dependentWord.getSemantic().equals(headWord.getSemantic())) {
                             return "COMPOUND";
                         }
+                        /**
+                         * If VP has a sister NP marked in nominative or accusative case, then it is linked to the root with the tag OBJ.
+                         */
                         if (dependentWord.getParse().containsTag(MorphologicalTag.NOMINATIVE) || dependentWord.getParse().containsTag(MorphologicalTag.ACCUSATIVE)) {
                             return "OBJ";
                         }
+                        /**
+                         * If there is no OBJ tagged argument, then the NP sisters of the root are linked to the root with the tag OBL.
+                         */
                         return "OBL";
                 }
+                /**
+                 * In NP sequences, each word is linked to the rightmost NP with the tag NMOD.
+                 */
                 return "NMOD";
             case "S":
                 switch (head) {
                     case "VP":
+                        /**
+                         * If VP has an S node or a verbal noun as a sister, then it is linked to the root with the tag CCOMP.
+                         */
                         return "CCOMP";
                     default:
                         return "DEP";
@@ -74,8 +122,14 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
             case "INTJ":
                 return "DISCOURSE";
             case "NEG":
+                /**
+                 * The node NEG is linked to the head of its sister node which is a VP or NOMP.
+                 */
                 return "NEG";
             case "CONJP":
+                /**
+                 * The head of a CONJP is linked to the head of the first following phrase which is of the same nature as the one immediately preceding the CONJP node.
+                 */
                 return "CC";
             default:
                 return "DEP";
@@ -96,18 +150,10 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
                     thirdChild = parent.getChild(2).getData().getName();
                 }
                 if (parent.numberOfChildren() == 2 && parentData.equals("S") && firstChild.equals("NP")) {
-                    if (wordNodePairList.get(headIndex).getWord().getParse().containsTag(MorphologicalTag.PASSIVE)) {
-                        wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(headIndex).getNo(), "NSUBJPASS");
-                    } else {
-                        wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(headIndex).getNo(), "NSUBJ");
-                    }
+                    wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(headIndex).getNo(), "NSUBJ");
                 } else if (parent.numberOfChildren() == 3 && parentData.equals("S") && firstChild.equals("NP") && secondChild.equals("VP") && Word.isPunctuation(thirdChild)) {
                     if (!wordNodePairList.get(i).getWord().isPunctuation()) {
-                        if (wordNodePairList.get(headIndex).getWord().getParse().containsTag(MorphologicalTag.PASSIVE)) {
-                            wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(headIndex).getNo(), "NSUBJPASS");
-                        } else {
-                            wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(headIndex).getNo(), "NSUBJ");
-                        }
+                        wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(headIndex).getNo(), "NSUBJ");
                     } else {
                         wordNodePairList.get(i).getWord().setUniversalDependency(wordNodePairList.get(headIndex).getNo(), "PUNCT");
                     }
