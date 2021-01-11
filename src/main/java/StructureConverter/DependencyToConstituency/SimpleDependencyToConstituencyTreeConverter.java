@@ -53,7 +53,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         for (int j = 0; j < wordList.size(); j++) {
             WordNodePair word2 = wordList.get(j);
             int toWord2 = word2.getTo() - 1;
-            if (i != j && toWord2 > -1) {
+            if (i != j && toWord2 > -1 && toWord2 < wordList.size()) {
                 if (wordList.get(i).equals(wordList.get(toWord2))) {
                     return false;
                 }
@@ -385,7 +385,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                 }
             }
             grandParent.addChild(specialWord);
-            if (checkForSize) {
+            if (checkForSize && parent != null) {
                 grandParent.addChild(parent);
             }
         } else {
