@@ -7,6 +7,7 @@ import ParseTree.*;
 import ParseTree.ParseTree;
 import Dictionary.Word;
 import StructureConverter.*;
+import java.util.AbstractMap.SimpleEntry;
 
 import java.util.*;
 
@@ -72,15 +73,22 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         } else specialsMap.getOrDefault(dependency1, list).add(getParent(node));
     }
 
-    private ArrayList<ParseNodeDrawable> setOfNodesToBeMergedOntoNode(ArrayList<WordNodePair> wordNodePairs, WordNodePair rootWord, ArrayList<ParseNodeDrawable> punctuations, LinkedHashMap<String, ArrayList<ParseNodeDrawable>> specialsMap) {
+    private SimpleEntry<ArrayList<ParseNodeDrawable>, Boolean> setOfNodesToBeMergedOntoNode(ArrayList<WordNodePair> wordNodePairs, WordNodePair rootWord, ArrayList<ParseNodeDrawable> punctuations, LinkedHashMap<String, ArrayList<ParseNodeDrawable>> specialsMap, HashSet<Coordinates> set) {
         ArrayList<ParseNodeDrawable> list = new ArrayList<>();
+        boolean isFinished = false;
         for (int i = 0; i < wordNodePairs.size(); i++) {
             WordNodePair wordNodePair = wordNodePairs.get(i);
             int toWord1 = wordNodePair.getTo() - 1;
             if (!wordNodePair.isDone()) {
                 if (noIncomingNodes(wordNodePairs, i) && toWord1 == rootWord.getNo()) {
-                    wordNodePairs.get(i).done();
+                    wordNodePair.done();
                     updateUnionCandidateLists(list, wordNodePair, punctuations, specialsMap);
+                    if (rootWord.getTo() - 1 < wordNodePairs.size() && rootWord.getTo() - 1 > -1 && !wordNodePairs.get(rootWord.getTo() - 1).isDone() && Math.abs(rootWord.getTo() - rootWord.getNo()) == 1 && rootWord.getUniversalDependency().equals("CONJ") && Math.abs(wordNodePair.getTo() - wordNodePair.getNo()) == 2 && wordNodePair.getUniversalDependency().equals("CC")) {
+                        wordNodePairs.get(rootWord.getTo() - 1).done();
+                        updateUnionCandidateLists(list, wordNodePairs.get(rootWord.getTo() - 1), punctuations, specialsMap);
+                        isFinished = true;
+                        set.add(new Coordinates(rootWord.getTo() - 1, wordNodePairs.get(rootWord.getTo() - 1).getTo()));
+                    }
                 }
             } else {
                 if (toWord1 > -1 && toWord1 == rootWord.getNo()) {
@@ -88,7 +96,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                 }
             }
         }
-        return list;
+        return new SimpleEntry<>(list, isFinished);
     }
 
     private boolean empty(LinkedHashMap<String, ArrayList<ParseNodeDrawable>> map) {
@@ -320,7 +328,9 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                 if (!set.contains(new Coordinates(j, wordNodePairs.get(j).getTo()))) {
                     punctuations = new ArrayList<>();
                     specialsMap = setSpecialMap();
-                    unionList = setOfNodesToBeMergedOntoNode(wordNodePairs, wordNodePairs.get(j), punctuations, specialsMap);
+                    SimpleEntry<ArrayList<ParseNodeDrawable>, Boolean> simpleEntry = setOfNodesToBeMergedOntoNode(wordNodePairs, wordNodePairs.get(j), punctuations, specialsMap, set);
+                    unionList = simpleEntry.getKey();
+                    boolean isFinished = simpleEntry.getValue();
                     j++;
                     if (specialWord != null) {
                         total = unionList.size() + punctuations.size() + 1 + totalSizeOfMap(specialsMap);
@@ -328,6 +338,9 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                         total = unionList.size() + punctuations.size() + totalSizeOfMap(specialsMap);
                     }
                     if ((dependencyMap.containsKey(j) && isThereAll(dependencyMap, j, total) && (unionList.size() != 0 || punctuations.size() != 0 || !empty(specialsMap) || specialWord != null))) {
+                        break;
+                    }
+                    if (isFinished) {
                         break;
                     }
                 } else {

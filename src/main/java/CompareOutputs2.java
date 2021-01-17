@@ -3,6 +3,7 @@ import AnnotatedTree.ParseTreeDrawable;
 import AnnotatedTree.TreeBankDrawable;
 import ParseTree.ParseTree;
 import ParseTree.ParseNode;
+import java.util.AbstractMap.SimpleEntry;
 
 import java.io.File;
 import java.util.*;
@@ -91,6 +92,7 @@ public class CompareOutputs2 {
         List<ParseTree> parseTrees2 = treeBankDrawable2.getParseTrees();
         HashMap<Integer, Integer> map = new HashMap<>();
         HashMap<String, HashMap<String, Integer>> tagMap = new HashMap<>();
+        HashMap<Integer, SimpleEntry<Integer, Integer>> sentenceMap = new HashMap<>();
         map.put(0, 0);
         map.put(1, 0);
         int i = 0, j = 0;
@@ -117,6 +119,11 @@ public class CompareOutputs2 {
                         tagMap.get(node1.getData().getName()).put(node2.getData().getName(), tagMap.get(node1.getData().getName()).get(node2.getData().getName()) + 1);
                         correct = traverseTrees((ParseNodeDrawable) node1, (ParseNodeDrawable) node2, set, correct, tagMap);
                         fillMap(correct, node2.nodeCount() - node2.leafCount(), map);
+                        int wordCount = parseTreeDrawable2.generateAnnotatedSentence().wordCount();
+                        if (!sentenceMap.containsKey(wordCount)) {
+                            sentenceMap.put(wordCount, new SimpleEntry<>(0, 0));
+                        }
+                        sentenceMap.put(wordCount, new SimpleEntry<>(sentenceMap.get(wordCount).getKey() + correct, sentenceMap.get(wordCount).getValue() + node2.nodeCount() - node2.leafCount()));
                         if (current != map.get(0)) {
                             System.out.println(parseTreeDrawable2.getName() + " not same trees.");
                         }
@@ -136,5 +143,8 @@ public class CompareOutputs2 {
         System.out.println("1: " + map.get(1));
         System.out.println("success rate: %" + (map.get(1) * 100.00) / (map.get(1) + map.get(0)));
         printScores(tagMap);
+        for (Integer key : sentenceMap.keySet()) {
+            System.out.println(key + ": " + sentenceMap.get(key).getKey() + " " + sentenceMap.get(key).getValue());
+        }
     }
 }
