@@ -63,10 +63,10 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         return true;
     }
 
-    private void updateUnionCandidateLists(ArrayList<ParseNodeDrawable> list, WordNodePair wordNodePair, ArrayList<ParseNodeDrawable> punctuations, LinkedHashMap<String, ArrayList<ParseNodeDrawable>> specialsMap) {
+    private void updateUnionCandidateLists(ArrayList<ParseNodeDrawable> list, WordNodePair wordNodePair, ArrayList<ParseNodeDrawable> punctuations, LinkedHashMap<String, ArrayList<ParseNodeDrawable>> specialsMap, boolean isFinished) {
         ParseNodeDrawable node = wordNodePair.getNode();
         String dependency1 = wordNodePair.getUniversalDependency();
-        if (dependency1.equals("NSUBJ") || dependency1.equals("CSUBJ")) {
+        if (!isFinished && dependency1.equals("NSUBJ") || dependency1.equals("CSUBJ")) {
             specialWord = getParent(node);
         } else if (Word.isPunctuation(node.getParent().getData().getName()) && dependency1.equals("PUNCT")) {
             punctuations.add(getParent(node));
@@ -82,17 +82,17 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
             if (!wordNodePair.isDone()) {
                 if (noIncomingNodes(wordNodePairs, i) && toWord1 == rootWord.getNo()) {
                     wordNodePair.done();
-                    updateUnionCandidateLists(list, wordNodePair, punctuations, specialsMap);
+                    updateUnionCandidateLists(list, wordNodePair, punctuations, specialsMap, isFinished);
                     if (rootWord.getTo() - 1 < wordNodePairs.size() && rootWord.getTo() - 1 > -1 && !wordNodePairs.get(rootWord.getTo() - 1).isDone() && Math.abs(rootWord.getTo() - rootWord.getNo()) == 1 && rootWord.getUniversalDependency().equals("CONJ") && Math.abs(wordNodePair.getTo() - wordNodePair.getNo()) == 2 && wordNodePair.getUniversalDependency().equals("CC")) {
                         wordNodePairs.get(rootWord.getTo() - 1).done();
-                        updateUnionCandidateLists(list, wordNodePairs.get(rootWord.getTo() - 1), punctuations, specialsMap);
                         isFinished = true;
+                        updateUnionCandidateLists(list, wordNodePairs.get(rootWord.getTo() - 1), punctuations, specialsMap, isFinished);
                         set.add(new Coordinates(rootWord.getTo() - 1, wordNodePairs.get(rootWord.getTo() - 1).getTo()));
                     }
                 }
             } else {
                 if (toWord1 > -1 && toWord1 == rootWord.getNo()) {
-                    updateUnionCandidateLists(list, wordNodePair, punctuations, specialsMap);
+                    updateUnionCandidateLists(list, wordNodePair, punctuations, specialsMap, isFinished);
                 }
             }
         }
@@ -337,10 +337,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                     } else {
                         total = unionList.size() + punctuations.size() + totalSizeOfMap(specialsMap);
                     }
-                    if ((dependencyMap.containsKey(j) && isThereAll(dependencyMap, j, total) && (unionList.size() != 0 || punctuations.size() != 0 || !empty(specialsMap) || specialWord != null))) {
-                        break;
-                    }
-                    if (isFinished) {
+                    if (isFinished || (dependencyMap.containsKey(j) && isThereAll(dependencyMap, j, total) && (unionList.size() != 0 || punctuations.size() != 0 || !empty(specialsMap) || specialWord != null))) {
                         break;
                     }
                 } else {
