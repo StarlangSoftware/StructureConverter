@@ -1,5 +1,7 @@
 import AnnotatedTree.ParseNodeDrawable;
 import AnnotatedTree.ParseTreeDrawable;
+import AnnotatedTree.Processor.Condition.IsTurkishLeafNode;
+import AnnotatedTree.Processor.NodeDrawableCollector;
 import AnnotatedTree.TreeBankDrawable;
 import ParseTree.ParseTree;
 import ParseTree.ParseNode;
@@ -85,6 +87,18 @@ public class CompareOutputs2 {
         System.out.println(totalCorrect / total);
     }
 
+    private static boolean equals(ArrayList<ParseNodeDrawable> p1, ArrayList<ParseNodeDrawable> p2) {
+        if (p1.size() != p2.size()) {
+            return false;
+        }
+        for (int i = 0; i < p1.size(); i++) {
+            if (!p1.get(i).getParent().getData().getName().equals(p2.get(i).getParent().getData().getName())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public static void main(String[]args) {
         TreeBankDrawable treeBankDrawable1 = new TreeBankDrawable(new File("Turkish2"));
         TreeBankDrawable treeBankDrawable2 = new TreeBankDrawable(new File("Turkish3"));
@@ -102,7 +116,11 @@ public class CompareOutputs2 {
             if (parseTreeDrawable1.getName().equals(parseTreeDrawable2.getName())) {
                 String first = parseTreeDrawable1.generateAnnotatedSentence().toWords();
                 String second = parseTreeDrawable2.generateAnnotatedSentence().toWords();
-                if (first.toLowerCase(new Locale("tr")).equals(second.toLowerCase(new Locale("tr")))) {
+                NodeDrawableCollector n1 = new NodeDrawableCollector((ParseNodeDrawable) parseTreeDrawable1.getRoot(), new IsTurkishLeafNode());
+                NodeDrawableCollector n2 = new NodeDrawableCollector((ParseNodeDrawable) parseTreeDrawable2.getRoot(), new IsTurkishLeafNode());
+                ArrayList<ParseNodeDrawable> parseNodeDrawables1 = n1.collect();
+                ArrayList<ParseNodeDrawable> parseNodeDrawables2 = n2.collect();
+                if (equals(parseNodeDrawables1, parseNodeDrawables2) && first.toLowerCase(new Locale("tr")).equals(second.toLowerCase(new Locale("tr")))) {
                     ParseNode node1 = parseTreeDrawable1.getRoot();
                     ParseNode node2 = parseTreeDrawable2.getRoot();
                     if (node1.getData().getName().equals(node2.getData().getName())) {
