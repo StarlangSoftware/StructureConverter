@@ -29,6 +29,9 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
                 /**
                  * If an ADVP node does not have a verbal head, it is linked to either the head of the following ADJP or to the root VP head with the ADVMOD.
                  */
+                if (dependentWord.getParse().getRootPos().equals("NOUN")) {
+                    return "NMOD";
+                }
                 return "ADVMOD";
             case "ADJP":
                 switch (head) {
@@ -59,6 +62,9 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
                         /**
                          * If an ADVP node does not have a verbal head, it is linked to either the head of the following ADJP or to the root VP head with the ADVMOD.
                          */
+                        if (dependentWord.getParse() != null && dependentWord.getParse().getRootPos().equals("NOUN")) {
+                            return "NMOD";
+                        }
                         return "ADVMOD";
                 }
             case "DP":
