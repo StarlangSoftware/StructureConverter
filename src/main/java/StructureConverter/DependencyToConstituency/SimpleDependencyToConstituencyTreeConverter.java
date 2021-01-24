@@ -73,9 +73,39 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         } else specialsMap.getOrDefault(dependency1, list).add(getParent(node));
     }
 
-    private SimpleEntry<ArrayList<ParseNodeDrawable>, Boolean> setOfNodesToBeMergedOntoNode(ArrayList<WordNodePair> wordNodePairs, WordNodePair rootWord, ArrayList<ParseNodeDrawable> punctuations, LinkedHashMap<String, ArrayList<ParseNodeDrawable>> specialsMap, HashSet<Coordinates> set) {
+    private ArrayList<ParseNodeDrawable> updateList(ArrayList<WordNodePair> wordNodePairs, WordNodePair rootWord, ArrayList<ParseNodeDrawable> punctuations, LinkedHashMap<String, ArrayList<ParseNodeDrawable>> specialsMap) {
         ArrayList<ParseNodeDrawable> list = new ArrayList<>();
-        boolean isFinished = false;
+        WordNodePair conjPair = null;
+        WordNodePair ccPair = null;
+        int total = 0;
+        for (int i = 0; i < wordNodePairs.size(); i++) {
+            WordNodePair wordNodePair = wordNodePairs.get(i);
+            if (wordNodePair.getTo() - 1 == rootWord.getNo()) {
+                if (wordNodePair.getUniversalDependency().equals("CONJ")) {
+                    conjPair = wordNodePair;
+                }
+                total++;
+            }
+        }
+        if (conjPair != null) {
+            for (int i = 0; i < wordNodePairs.size(); i++) {
+                WordNodePair wordNodePair = wordNodePairs.get(i);
+                if (wordNodePair.getTo() - 1 == conjPair.getNo() && wordNodePair.getUniversalDependency().equals("CC")) {
+                    ccPair = wordNodePair;
+                    break;
+                }
+            }
+        }
+        if (ccPair != null && total > 1) {
+            updateUnionCandidateLists(list, conjPair, punctuations, specialsMap, false);
+            updateUnionCandidateLists(list, ccPair, punctuations, specialsMap, false);
+        }
+        return list;
+    }
+
+    private SimpleEntry<ArrayList<ParseNodeDrawable>, Boolean> setOfNodesToBeMergedOntoNode(ArrayList<WordNodePair> wordNodePairs, WordNodePair rootWord, ArrayList<ParseNodeDrawable> punctuations, LinkedHashMap<String, ArrayList<ParseNodeDrawable>> specialsMap, HashSet<Coordinates> set) {
+        ArrayList<ParseNodeDrawable> list = updateList(wordNodePairs, rootWord, punctuations, specialsMap);
+        boolean isFinished = !list.isEmpty();
         for (int i = 0; i < wordNodePairs.size(); i++) {
             WordNodePair wordNodePair = wordNodePairs.get(i);
             int toWord1 = wordNodePair.getTo() - 1;
@@ -83,11 +113,13 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                 if (noIncomingNodes(wordNodePairs, i) && toWord1 == rootWord.getNo()) {
                     wordNodePair.done();
                     updateUnionCandidateLists(list, wordNodePair, punctuations, specialsMap, isFinished);
-                    if (rootWord.getTo() - 1 < wordNodePairs.size() && rootWord.getTo() - 1 > -1 && !wordNodePairs.get(rootWord.getTo() - 1).isDone() && Math.abs(rootWord.getTo() - rootWord.getNo()) == 1 && rootWord.getUniversalDependency().equals("CONJ") && Math.abs(wordNodePair.getTo() - wordNodePair.getNo()) == 2 && wordNodePair.getUniversalDependency().equals("CC")) {
-                        wordNodePairs.get(rootWord.getTo() - 1).done();
+                    if (!isFinished && rootWord.getTo() - 1 < wordNodePairs.size() && rootWord.getTo() - 1 > -1 && !wordNodePairs.get(rootWord.getTo() - 1).isDone() && Math.abs(rootWord.getTo() - rootWord.getNo()) == 1 && rootWord.getUniversalDependency().equals("CONJ") && Math.abs(wordNodePair.getTo() - wordNodePair.getNo()) == 2 && wordNodePair.getUniversalDependency().equals("CC")) {
+                        if (noIncomingNodes(wordNodePairs, rootWord.getTo() - 1)) {
+                            wordNodePairs.get(rootWord.getTo() - 1).done();
+                            set.add(new Coordinates(rootWord.getTo() - 1, wordNodePairs.get(rootWord.getTo() - 1).getTo()));
+                        }
                         isFinished = true;
                         updateUnionCandidateLists(list, wordNodePairs.get(rootWord.getTo() - 1), punctuations, specialsMap, isFinished);
-                        set.add(new Coordinates(rootWord.getTo() - 1, wordNodePairs.get(rootWord.getTo() - 1).getTo()));
                     }
                 }
             } else {
@@ -346,7 +378,33 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         if (!root.getData().equals(new Symbol("S"))) {
             root.setData(new Symbol("S"));
         }
+        ArrayList<ParseNodeDrawable> parseNodeDrawables = findNodes(root);
+        setTree(parseNodeDrawables);
         return new ParseTree(root);
+    }
+
+    private void setTree(ArrayList<ParseNodeDrawable> parseNodeDrawables) {
+        for (ParseNodeDrawable p : parseNodeDrawables) {
+            ParseNodeDrawable child = (ParseNodeDrawable) p.getChild(0);
+            p.removeChild(child);
+            for (int i = 0; i < child.numberOfChildren(); i++) {
+                p.addChild(child.getChild(i));
+            }
+        }
+    }
+
+    private ArrayList<ParseNodeDrawable> findNodes(ParseNodeDrawable node) {
+        ArrayList<ParseNodeDrawable> list = new ArrayList<>();
+        for (int i = 0; i < node.numberOfChildren(); i++) {
+            ParseNodeDrawable child = (ParseNodeDrawable) node.getChild(i);
+            if (node.getLayerInfo() == null) {
+                if (node.numberOfChildren() == 1 && ((ParseNodeDrawable) node.getChild(0)).getLayerInfo() == null) {
+                    list.add(node);
+                }
+                list.addAll(findNodes(child));
+            }
+        }
+        return list;
     }
 
     private boolean isThereAll(HashMap<Integer, ArrayList<Integer>> map, int current, int total) {
