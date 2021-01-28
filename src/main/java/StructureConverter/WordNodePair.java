@@ -74,4 +74,13 @@ public class WordNodePair {
     public String getUniversalDependency() {
         return annotatedWord.getUniversalDependency().toString();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof WordNodePair)) {
+            return false;
+        }
+        WordNodePair wordNodePair = (WordNodePair) obj;
+        return this.annotatedWord.equals(wordNodePair.annotatedWord) && this.no == wordNodePair.no && this.done == wordNodePair.done;
+    }
 }
