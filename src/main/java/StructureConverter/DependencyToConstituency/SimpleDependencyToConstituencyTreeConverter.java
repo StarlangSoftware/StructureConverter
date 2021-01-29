@@ -18,7 +18,6 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         map.put("AUX", 7);
         map.put("DET", 6);
         map.put("AMOD", 5);
-        //map.put("NMOD", 5);
         map.put("NUMMOD", 4);
         map.put("CASE", 3);
         map.put("CCOMP", 2);
@@ -262,6 +261,37 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         return false;
     }
 
+    private void finalMergeForObjects(ArrayList<WordNodePair> unionList, int currentIndex) {
+        if (unionList.get(currentIndex).getWord().getUniversalDependency().toString().equals("ROOT")) {
+            ArrayList<WordNodePair> objectsForMerge = new ArrayList<>();
+            ParseNodeDrawable node = new ParseNodeDrawable(new Symbol("VP"));
+            boolean check = false;
+            for (int i = 0; i < unionList.size(); i++) {
+                if (unionList.get(i).getTo() - 1 == unionList.get(currentIndex).getNo() && unionList.get(i).getUniversalDependency().equals("OBJ") || unionList.get(i).getUniversalDependency().equals("IOBJ") || unionList.get(i).getUniversalDependency().equals("OBL")) {
+                    objectsForMerge.add(unionList.get(i));
+                    check = true;
+                } else if (i == currentIndex) {
+                    objectsForMerge.add(unionList.get(currentIndex));
+                } else if (check) {
+                    if (!unionList.get(i).getWord().isPunctuation()) {
+                        objectsForMerge.add(unionList.get(i));
+                    } else {
+                        break;
+                    }
+                }
+            }
+            if (objectsForMerge.size() > 1) {
+                if (!allSame(objectsForMerge)) {
+                    for (WordNodePair wordNodePair : objectsForMerge) {
+                        if (!containsChild(node, wordNodePair.getNode())) {
+                            node.addChild(getParent(wordNodePair.getNode()));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private void leftAndRightMerge(HashMap<String, Integer> specialsMap, ArrayList<WordNodePair> unionList, int currentIndex, String treePos) {
         int i = 1, j = 1, specialIndex = -1;
         ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(treePos));
@@ -307,6 +337,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                 addSpecialForLeft(specialIndex, unionList, parent);
             } else {
                 // temporary solution
+                finalMergeForObjects(unionList, currentIndex);
                 if (!allSame(unionList)) {
                     for (WordNodePair wordNodePair : unionList) {
                         if (!containsChild(parent, wordNodePair.getNode())) {
@@ -317,6 +348,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                 // temporary solution
             }
         } else {
+            finalMergeForObjects(unionList, currentIndex);
             if (!allSame(unionList)) {
                 for (WordNodePair wordNodePair : unionList) {
                     if (!containsChild(parent, wordNodePair.getNode())) {
