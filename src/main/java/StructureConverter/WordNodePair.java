@@ -11,6 +11,7 @@ public class WordNodePair {
     private ParseNodeDrawable node;
     private int no;
     private boolean done;
+    private boolean finished;
 
     public WordNodePair(AnnotatedWord annotatedWord, int no) throws ParenthesisInLayerException {
         this.annotatedWord = annotatedWord;
@@ -26,6 +27,7 @@ public class WordNodePair {
         parent.addChild(node);
         this.no = no;
         this.done = false;
+        this.finished = false;
     }
 
     public WordNodePair(ParseNodeDrawable parseNodeDrawable, int no) {
@@ -63,8 +65,16 @@ public class WordNodePair {
         return done;
     }
 
+    public boolean isFinished() {
+        return finished;
+    }
+
     public void done() {
         this.done = true;
+    }
+
+    public void finished() {
+        this.finished = true;
     }
 
     public String getTreePos() {
