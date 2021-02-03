@@ -73,6 +73,12 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         return wordNodePairs;
     }
 
+    /**
+     * @param wordList {@link WordNodePair} {@link ArrayList}.
+     * @param i indexed element.
+     * @return checks if there is any connection to the indexed element.
+     */
+
     private boolean noIncomingNodes(ArrayList<WordNodePair> wordList, int i) {
         for (int j = 0; j < wordList.size(); j++) {
             WordNodePair word = wordList.get(j);
@@ -114,6 +120,13 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
             }
         }
     }
+
+    /**
+     * Finds words to combine.
+     * @param wordNodePairs {@link WordNodePair} {@link ArrayList}.
+     * @param headWord the head of words to combine.
+     * @return the {@link ArrayList} of {@link WordNodePair}s to combine.
+     */
 
     private SimpleEntry<ArrayList<WordNodePair>, Boolean> setOfNodesToBeMergedOntoNode(ArrayList<WordNodePair> wordNodePairs, WordNodePair headWord) {
         ArrayList<WordNodePair> list = new ArrayList<>();
@@ -389,6 +402,11 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         }
     }
 
+    /**
+     * @param unionList {@link ArrayList} of those who will merge.
+     * @return Checks if the {@link ParseNodeDrawable}s in <code>unionList</code> are all the same.
+     */
+
     private boolean allSame(ArrayList<WordNodePair> unionList) {
         for (int i = 1; i < unionList.size(); i++) {
             if (!getParent(unionList.get(i - 1).getNode()).equals(getParent(unionList.get(i).getNode()))) {
@@ -397,6 +415,12 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         }
         return true;
     }
+
+    /**
+     * Merges two {@link WordNodePair}s.
+     * @param unionList {@link ArrayList} of those who will merge.
+     * @param treePos treePos of two {@link ParseNodeDrawable}.
+     */
 
     private void simpleMerge(ArrayList<WordNodePair> unionList, String treePos) {
         ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(treePos));
@@ -407,6 +431,14 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
             }
         }
     }
+
+    /**
+     * Merges {@link WordNodePair}s in <code>unionlist</code>.
+     * @param wordNodePairs {@link WordNodePair} {@link ArrayList} of all words.
+     * @param specialsMap priority {@link HashMap}.
+     * @param unionList {@link ArrayList} of {@link WordNodePair}s to merge.
+     * @param i index of headWord.
+     */
 
     private void merge(ArrayList<WordNodePair> wordNodePairs, HashMap<String, Integer> specialsMap, ArrayList<WordNodePair> unionList, int i) {
         updateUnionCandidateLists(unionList, wordNodePairs.get(i));
