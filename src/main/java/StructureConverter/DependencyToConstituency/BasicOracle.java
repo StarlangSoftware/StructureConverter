@@ -64,10 +64,12 @@ public class BasicOracle implements ProjectionOracle {
     }
 
     private void addSpecialForLeft(ArrayList<WordNodePair> unionList, ArrayList<SimpleEntry<Command, String>> commands, int i, int j, int currentIndex) {
+        boolean check = false;
         while (currentIndex - i > -1) {
             if (unionList.get(currentIndex - i).getWord().isPunctuation() || unionList.get(currentIndex - i).getUniversalDependency().equals("NSUBJ") || unionList.get(currentIndex - i).getUniversalDependency().equals("CSUBJ")) {
                 break;
             } else {
+                check = true;
                 commands.add(new SimpleEntry<>(Command.LEFT, null));
             }
             i++;
@@ -76,11 +78,14 @@ public class BasicOracle implements ProjectionOracle {
             if (unionList.get(currentIndex + j).getWord().isPunctuation()) {
                 break;
             } else {
+                check = true;
                 commands.add(new SimpleEntry<>(Command.RIGHT, null));
             }
             j++;
         }
-        commands.add(new SimpleEntry<>(Command.MERGE, "VP"));
+        if (check) {
+            commands.add(new SimpleEntry<>(Command.MERGE, "VP"));
+        }
         while (currentIndex + j < unionList.size()) {
             commands.add(new SimpleEntry<>(Command.RIGHT, null));
             j++;

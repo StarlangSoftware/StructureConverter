@@ -229,7 +229,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                 Command command = list.get(iterate).getKey();
                 switch (command) {
                     case MERGE:
-                        String treePos = setTreePos(currentUnionList, unionList.get(index).getTreePos());
+                        String treePos = setTreePos(unionList, unionList.get(index).getTreePos());
                         if (list.get(iterate).getValue() != null) {
                             treePos = list.get(iterate).getValue();
                         }
@@ -277,6 +277,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
     private boolean isThereAll(HashMap<Integer, ArrayList<Integer>> map, int current, int total) {
         return map.get(current).size() == total;
     }
+
     private ParseNodeDrawable getParent(ParseNodeDrawable node) {
         if (node.getParent() != null) {
             return getParent((ParseNodeDrawable) node.getParent());
