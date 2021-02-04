@@ -3,9 +3,7 @@ import AnnotatedSentence.AnnotatedSentence;
 import AnnotatedSentence.AnnotatedWord;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Locale;
+import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 
 public class CompareOutputs1 {
@@ -25,7 +23,21 @@ public class CompareOutputs1 {
     }
 
     private static void print(HashMap<String, HashMap<String, Integer>> tagMap) {
-        ArrayList<String> keySet = new ArrayList<>(tagMap.keySet());
+        LinkedHashSet<String> set = new LinkedHashSet<>();
+        set.add("ADVMOD");
+        set.add("AMOD");
+        set.add("CASE");
+        set.add("CC");
+        set.add("CCOMP");
+        set.add("COMPOUND");
+        set.add("DET");
+        set.add("FLAT");
+        set.add("NMOD");
+        set.add("NSUBJ");
+        set.add("NUMMOD");
+        set.add("OBJ");
+        set.add("OBL");
+        ArrayList<String> keySet = new ArrayList<>(set);
         for (int i = 0; i < 12; i++) {
             if (i != 10) {
                 System.out.print(" ");

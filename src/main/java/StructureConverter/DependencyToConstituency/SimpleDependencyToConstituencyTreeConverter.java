@@ -156,26 +156,6 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
     }
 
     /**
-     * @param first first {@link WordNodePair}.
-     * @param second second {@link WordNodePair}.
-     * @param specialsMap priority {@link HashMap}.
-     * @return which {@link WordNodePair} has priority based on {@link UniversalDependencyRelation}s.
-     */
-
-    private int compareTo(WordNodePair first, WordNodePair second, HashMap<String, Integer> specialsMap) {
-        String firstUniversalDependency = first.getUniversalDependency();
-        String secondUniversalDependency = second.getUniversalDependency();
-        if (specialsMap.containsKey(firstUniversalDependency) && specialsMap.containsKey(secondUniversalDependency)) {
-            return specialsMap.get(firstUniversalDependency).compareTo(specialsMap.get(secondUniversalDependency));
-        } else if (specialsMap.containsKey(firstUniversalDependency)) {
-            return 1;
-        } else if (specialsMap.containsKey(secondUniversalDependency)) {
-            return -1;
-        }
-        return 0;
-    }
-
-    /**
      * @param parent {@link ParseNodeDrawable}.
      * @param child {@link ParseNodeDrawable}.
      * @return if <code>parent</code> has a <code>child</code> -> true, if not -> false.
@@ -188,218 +168,6 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
             }
         }
         return false;
-    }
-
-    private void addChild(String pos, WordNodePair first, WordNodePair second) {
-        ArrayList<WordNodePair> list = new ArrayList<>();
-        list.add(first);
-        list.add(second);
-        String currentPos = setTreePos(list, pos);
-        ParseNodeDrawable currentParent = new ParseNodeDrawable(new Symbol(currentPos));
-        currentParent.addChild(getParent(first.getNode()));
-        currentParent.addChild(getParent(second.getNode()));
-    }
-
-    private void addChild(String pos, WordNodePair first, WordNodePair second, WordNodePair third) {
-        ArrayList<WordNodePair> list = new ArrayList<>();
-        list.add(first);
-        list.add(second);
-        list.add(third);
-        String currentPos = setTreePos(list, pos);
-        ParseNodeDrawable currentParent = new ParseNodeDrawable(new Symbol(currentPos));
-        currentParent.addChild(getParent(first.getNode()));
-        currentParent.addChild(getParent(second.getNode()));
-        currentParent.addChild(getParent(third.getNode()));
-    }
-
-    private int addChildForDecreasing(WordNodePair rootWord, int index, ArrayList<WordNodePair> unionList, HashMap<String, Integer> specialsMap) {
-        ArrayList<WordNodePair> list = new ArrayList<>();
-        list.add(rootWord);
-        list.add(unionList.get(index));
-        int i = 0;
-        while (index - (i + 1) > -1) {
-            if (compareTo(unionList.get(index - i), unionList.get(index - (i + 1)), specialsMap) == 0) {
-                list.add(unionList.get(index - (i + 1)));
-            } else {
-                break;
-            }
-            i++;
-        }
-        Collections.reverse(list);
-        String currentPos = setTreePos(list, rootWord.getTreePos());
-        ParseNodeDrawable currentParent = new ParseNodeDrawable(new Symbol(currentPos));
-        if (!allSame(list)) {
-            for (WordNodePair wordNodePair : list) {
-                if (!containsChild(currentParent, wordNodePair.getNode())) {
-                    currentParent.addChild(getParent(wordNodePair.getNode()));
-                }
-            }
-        }
-        return i + 1;
-    }
-
-    private int addChildForLeft(int currentIndex, int i, ArrayList<WordNodePair> unionList, HashMap<String, Integer> specialsMap) {
-        if (currentIndex - (i + 1) > -1 && compareTo(unionList.get(currentIndex - i), unionList.get(currentIndex - (i + 1)), specialsMap) == 0) {
-            i += addChildForDecreasing(unionList.get(currentIndex),currentIndex - i, unionList, specialsMap);
-        } else {
-            addChild(unionList.get(currentIndex).getTreePos(), unionList.get(currentIndex - i), unionList.get(currentIndex));
-            i++;
-        }
-        return i;
-    }
-
-    private int findSpecialIndex(ArrayList<WordNodePair> unionList, int currentIndex) {
-        for (int i = 0; i < unionList.size(); i++) {
-            if (currentIndex != i && unionList.get(i).getUniversalDependency().equals("NSUBJ") || unionList.get(i).getUniversalDependency().equals("CSUBJ")) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    private void addSpecialForLeft(int specialIndex, ArrayList<WordNodePair> unionList, ParseNodeDrawable parent) {
-        if (!allSame(unionList)) {
-            boolean isFinished = true;
-            int i = 0;
-            while (isFinished) {
-                if (i >= specialIndex + 1 && !unionList.get(i).getWord().isPunctuation()) {
-                    isFinished = false;
-                } else {
-                    if (!containsChild(parent, unionList.get(i).getNode())) {
-                        parent.addChild(getParent(unionList.get(i).getNode()));
-                    }
-                }
-                i++;
-            }
-            ParseNodeDrawable p = new ParseNodeDrawable(new Symbol("VP"));
-            int j = i - 1;
-            while (j < unionList.size()) {
-                if (!unionList.get(j).getWord().isPunctuation()) {
-                    if (!containsChild(p, unionList.get(j).getNode())) {
-                        p.addChild(getParent(unionList.get(j).getNode()));
-                    }
-                } else {
-                    break;
-                }
-                j++;
-            }
-            if (!containsChild(parent, p)) {
-                parent.addChild(getParent(p));
-            }
-            while (j < unionList.size()) {
-                if (!containsChild(parent, unionList.get(j).getNode())) {
-                    parent.addChild(getParent(unionList.get(j).getNode()));
-                }
-                j++;
-            }
-        }
-    }
-
-    private boolean containsWordNodePair(ArrayList<WordNodePair> unionList, int wordNodePairNo) {
-        for (WordNodePair wordNodePair : unionList) {
-            if (wordNodePair.getNo() == wordNodePairNo) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void finalMergeForObjects(ArrayList<WordNodePair> unionList, int currentIndex) {
-        if (unionList.get(currentIndex).getWord().getUniversalDependency().toString().equals("ROOT")) {
-            ArrayList<WordNodePair> objectsForMerge = new ArrayList<>();
-            ParseNodeDrawable node = new ParseNodeDrawable(new Symbol("VP"));
-            boolean check = false;
-            for (int i = 0; i < unionList.size(); i++) {
-                if (unionList.get(i).getTo() - 1 == unionList.get(currentIndex).getNo() && unionList.get(i).getUniversalDependency().equals("OBJ") || unionList.get(i).getUniversalDependency().equals("IOBJ") || unionList.get(i).getUniversalDependency().equals("OBL")) {
-                    objectsForMerge.add(unionList.get(i));
-                    check = true;
-                } else if (i == currentIndex) {
-                    objectsForMerge.add(unionList.get(currentIndex));
-                } else if (check) {
-                    if (!unionList.get(i).getWord().isPunctuation()) {
-                        objectsForMerge.add(unionList.get(i));
-                    } else {
-                        break;
-                    }
-                }
-            }
-            if (objectsForMerge.size() > 1) {
-                if (!allSame(objectsForMerge)) {
-                    for (WordNodePair wordNodePair : objectsForMerge) {
-                        if (!containsChild(node, wordNodePair.getNode())) {
-                            node.addChild(getParent(wordNodePair.getNode()));
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private void leftAndRightMerge(HashMap<String, Integer> specialsMap, ArrayList<WordNodePair> unionList, int currentIndex, String treePos) {
-        int i = 1, j = 1, specialIndex = -1;
-        ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(treePos));
-        while (currentIndex - i > -1 || currentIndex + j < unionList.size()) {
-            if (currentIndex - i > -1 && currentIndex + j < unionList.size()) {
-                if (compareTo(unionList.get(currentIndex - i), unionList.get(currentIndex + j), specialsMap) > 0) {
-                    i = addChildForLeft(currentIndex, i, unionList, specialsMap);
-                } else if (compareTo(unionList.get(currentIndex - i), unionList.get(currentIndex + j), specialsMap) < 0) {
-                    addChild(unionList.get(currentIndex).getTreePos(), unionList.get(currentIndex), unionList.get(currentIndex + j));
-                    j++;
-                } else {
-                    if (!specialsMap.containsKey(unionList.get(currentIndex - i).getUniversalDependency()) && !specialsMap.containsKey(unionList.get(currentIndex + j).getUniversalDependency())) {
-                        break;
-                    } else {
-                        addChild(unionList.get(currentIndex).getTreePos(), unionList.get(currentIndex - i), unionList.get(currentIndex), unionList.get(currentIndex + j));
-                        i++;
-                        j++;
-                    }
-                }
-            } else if (currentIndex - i > -1) {
-                if (specialsMap.containsKey(unionList.get(currentIndex - i).getUniversalDependency())) {
-                    i = addChildForLeft(currentIndex, i, unionList, specialsMap);
-                } else {
-                    if (unionList.get(currentIndex - i).getUniversalDependency().equals("NSUBJ") || unionList.get(currentIndex - i).getUniversalDependency().equals("CSUBJ")) {
-                        specialIndex = currentIndex - i;
-                    }
-                    break;
-                }
-            } else {
-                if (specialsMap.containsKey(unionList.get(currentIndex + j).getUniversalDependency())) {
-                    addChild(unionList.get(currentIndex).getTreePos(), unionList.get(currentIndex), unionList.get(currentIndex + j));
-                    j++;
-                } else {
-                    break;
-                }
-            }
-        }
-        if (specialIndex == -1) {
-            specialIndex = findSpecialIndex(unionList, currentIndex);
-        }
-        if (specialIndex > -1 && containsWordNodePair(unionList, unionList.get(specialIndex).getTo() - 1)) {
-            if (currentIndex > specialIndex) {
-                addSpecialForLeft(specialIndex, unionList, parent);
-            } else {
-                // temporary solution
-                finalMergeForObjects(unionList, currentIndex);
-                if (!allSame(unionList)) {
-                    for (WordNodePair wordNodePair : unionList) {
-                        if (!containsChild(parent, wordNodePair.getNode())) {
-                            parent.addChild(getParent(wordNodePair.getNode()));
-                        }
-                    }
-                }
-                // temporary solution
-            }
-        } else {
-            finalMergeForObjects(unionList, currentIndex);
-            if (!allSame(unionList)) {
-                for (WordNodePair wordNodePair : unionList) {
-                    if (!containsChild(parent, wordNodePair.getNode())) {
-                        parent.addChild(getParent(wordNodePair.getNode()));
-                    }
-                }
-            }
-        }
     }
 
     /**
@@ -440,10 +208,10 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
      * @param i index of headWord.
      */
 
-    private void merge(ArrayList<WordNodePair> wordNodePairs, HashMap<String, Integer> specialsMap, ArrayList<WordNodePair> unionList, int i) {
+    private void merge(ArrayList<WordNodePair> wordNodePairs, HashMap<String, Integer> specialsMap, ArrayList<WordNodePair> unionList, int i, ProjectionOracle oracle) {
         updateUnionCandidateLists(unionList, wordNodePairs.get(i));
-        String treePos = setTreePos(unionList, wordNodePairs.get(i).getTreePos());
         if (unionList.size() == 2) {
+            String treePos = setTreePos(unionList, wordNodePairs.get(i).getTreePos());
             simpleMerge(unionList, treePos);
         } else {
             int index = -1;
@@ -453,7 +221,46 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                     break;
                 }
             }
-            leftAndRightMerge(specialsMap, unionList, index, treePos);
+            ArrayList<SimpleEntry<Command, String>> list = oracle.makeCommands(specialsMap, unionList, index);
+            ArrayList<WordNodePair> currentUnionList = new ArrayList<>();
+            currentUnionList.add(unionList.get(index));
+            int leftIndex = 0, rightIndex = 0, iterate = 0;
+            while (iterate < list.size()) {
+                Command command = list.get(iterate).getKey();
+                switch (command) {
+                    case MERGE:
+                        String treePos = setTreePos(currentUnionList, unionList.get(index).getTreePos());
+                        if (list.get(iterate).getValue() != null) {
+                            treePos = list.get(iterate).getValue();
+                        }
+                        mergeNodes(currentUnionList, treePos);
+                        currentUnionList.clear();
+                        currentUnionList.add(unionList.get(index));
+                        break;
+                    case LEFT:
+                        leftIndex++;
+                        updateUnionCandidateLists(currentUnionList, unionList.get(index - leftIndex));
+                        break;
+                    case RIGHT:
+                        rightIndex++;
+                        updateUnionCandidateLists(currentUnionList, unionList.get(index + rightIndex));
+                        break;
+                    default:
+                        break;
+                }
+                iterate++;
+            }
+        }
+    }
+
+    private void mergeNodes(ArrayList<WordNodePair> list, String treePos) {
+        ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(treePos));
+        if (!allSame(list)) {
+            for (WordNodePair wordNodePair : list) {
+                if (!containsChild(parent, wordNodePair.getNode())) {
+                    parent.addChild(getParent(wordNodePair.getNode()));
+                }
+            }
         }
     }
 
@@ -502,11 +309,16 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
      * @return a {@link ParseTree}.
      */
 
-    private ParseTree constructTreeFromWords(ArrayList<WordNodePair> wordNodePairs, HashMap<Integer, ArrayList<Integer>> dependencyMap) {
+    private ParseTree constructTreeFromWords(ArrayList<WordNodePair> wordNodePairs, HashMap<Integer, ArrayList<Integer>> dependencyMap, ParserConverterType type) {
+        ProjectionOracle oracle;
+        if (type.equals(ParserConverterType.BASIC_ORACLE)) {
+            oracle = new BasicOracle();
+        } else {
+            oracle = new ClassifierOracle();
+        }
         HashMap<String, Integer> specialsMap = setSpecialMap();
-        boolean done = true;
         int total;
-        while (done) {
+        while (true) {
             int j = 0;
             ArrayList<WordNodePair> unionList = new ArrayList<>();
             do {
@@ -527,9 +339,10 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                 }
             } while (true);
             wordNodePairs.get(j - 1).finished();
-            done = unionList.size() != 0;
             if (unionList.size() > 0) {
-                merge(wordNodePairs, specialsMap, unionList, j - 1);
+                merge(wordNodePairs, specialsMap, unionList, j - 1, oracle);
+            } else {
+                break;
             }
         }
         ParseNodeDrawable root = getParent(wordNodePairs.get(0).getNode());
@@ -571,12 +384,12 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
      * @return a {@link ParseTree}.
      */
 
-    public ParseTree convert(AnnotatedSentence annotatedSentence) {
+    public ParseTree convert(AnnotatedSentence annotatedSentence, ParserConverterType type) {
         try {
             ArrayList<WordNodePair> wordNodePairs = constructWordPairList(annotatedSentence, annotatedSentence.getFileName());
             HashMap<Integer, ArrayList<Integer>> dependencyMap = setDependencyMap(wordNodePairs);
             if (wordNodePairs.size() > 1) {
-                return constructTreeFromWords(wordNodePairs, dependencyMap);
+                return constructTreeFromWords(wordNodePairs, dependencyMap, type);
             } else {
                 ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol("S"));
                 parent.addChild(wordNodePairs.get(0).getNode());
