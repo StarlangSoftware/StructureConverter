@@ -253,6 +253,12 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         }
     }
 
+    /**
+     * Merges {@link ParseNodeDrawable}s in <code>list</code>.
+     * @param list {@link WordNodePair} {@link ArrayList}.
+     * @param treePos pos tag of {@link ParseNodeDrawable}s.
+     */
+
     private void mergeNodes(ArrayList<WordNodePair> list, String treePos) {
         ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(treePos));
         if (!allSame(list)) {
@@ -264,6 +270,13 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         }
     }
 
+    /**
+     * Finds treePos of {@link ParseNodeDrawable}s.
+     * @param list {@link WordNodePair} {@link ArrayList}.
+     * @param currentPos head's pos tag.
+     * @return a pos tag.
+     */
+
     private String setTreePos(ArrayList<WordNodePair> list, String currentPos) {
         String treePos = currentPos;
         for (WordNodePair current : list) {
@@ -274,9 +287,22 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         return treePos;
     }
 
+    /**
+     * @param map dependency {@link HashMap}.
+     * @param current key of {@link ParseNodeDrawable}.
+     * @param total all connections.
+     * @return Checks all {@link ParseNodeDrawable}s are merging.
+     */
+
     private boolean isThereAll(HashMap<Integer, ArrayList<Integer>> map, int current, int total) {
         return map.get(current).size() == total;
     }
+
+    /**
+     * Get root of <code>node</code>.
+     * @param node {@link ParseNodeDrawable}.
+     * @return a {@link ParseNodeDrawable} (root).
+     */
 
     private ParseNodeDrawable getParent(ParseNodeDrawable node) {
         if (node.getParent() != null) {
@@ -285,6 +311,12 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
             return node;
         }
     }
+
+    /**
+     * Creates a {@link HashMap} which contains all connections of {@link ParseNodeDrawable}s.
+     * @param wordNodePairs {@link WordNodePair} {@link ArrayList}.
+     * @return a {@link HashMap}.
+     */
 
     private HashMap<Integer, ArrayList<Integer>> setDependencyMap(ArrayList<WordNodePair> wordNodePairs) {
         HashMap<Integer, ArrayList<Integer>> map = new HashMap<>();
@@ -355,6 +387,11 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         return new ParseTree(root);
     }
 
+    /**
+     * Removes one-child {@link ParseNodeDrawable}s.
+     * @param parseNodeDrawables {@link ParseNodeDrawable}s to be deleted.
+     */
+
     private void setTree(ArrayList<ParseNodeDrawable> parseNodeDrawables) {
         for (ParseNodeDrawable p : parseNodeDrawables) {
             ParseNodeDrawable child = (ParseNodeDrawable) p.getChild(0);
@@ -364,6 +401,11 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
             }
         }
     }
+
+    /**
+     * @param node Root of {@link ParseNodeDrawable}s.
+     * @return one-child {@link ParseNodeDrawable}s.
+     */
 
     private ArrayList<ParseNodeDrawable> findNodes(ParseNodeDrawable node) {
         ArrayList<ParseNodeDrawable> list = new ArrayList<>();
