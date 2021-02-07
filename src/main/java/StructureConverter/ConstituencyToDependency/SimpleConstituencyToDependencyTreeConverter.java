@@ -12,6 +12,13 @@ import java.util.ArrayList;
 
 public class SimpleConstituencyToDependencyTreeConverter implements ConstituencyToDependencyTreeConverter {
 
+    /**
+     * Finds last {@link WordNodePair}'s index.
+     * @param start start index of <code>wordNodePairList</code>.
+     * @param wordNodePairList {@link WordNodePair} {@link ArrayList}.
+     * @return a {@link Integer} ({@link WordNodePair}'s index).
+     */
+
     private int findEndingNode(int start, ArrayList<WordNodePair> wordNodePairList) {
         int i = start + 1;
         while (i < wordNodePairList.size() - 1 && wordNodePairList.get(i).getNode().getParent().equals(wordNodePairList.get(i + 1).getNode().getParent())) {
@@ -19,6 +26,13 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
         }
         return i;
     }
+
+    /**
+     * Converts {@link ParseNodeDrawable} to {@link WordNodePair}.
+     * @param parseNodeDrawable {@link ParseNodeDrawable}.
+     * @param wordNodePairList {@link WordNodePair} {@link ArrayList}.
+     * @return a {@link WordNodePair}.
+     */
 
     private WordNodePair convertParseNodeDrawableToWordNodePair(ParseNodeDrawable parseNodeDrawable, ArrayList<WordNodePair> wordNodePairList) {
         for (WordNodePair wordNodePair : wordNodePairList) {
@@ -28,6 +42,13 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
         }
         return null;
     }
+
+    /**
+     * Adds {@link DependencyParser.UniversalDependencyRelation} to <code>wordNodePairList</code>.
+     * @param parseNodeDrawableList {@link ParseNodeDrawable} {@link ArrayList}.
+     * @param wordNodePairList {@link WordNodePair} {@link ArrayList}.
+     * @param oracle {@link DependencyOracle}.
+     */
 
     private void addUniversalDependency(ArrayList<ParseNodeDrawable> parseNodeDrawableList, ArrayList<WordNodePair> wordNodePairList, DependencyOracle oracle) {
         for (int i = 0; i < parseNodeDrawableList.size() - 1; i++) {
@@ -73,6 +94,12 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
         }
     }
 
+    /**
+     * Sets <code>wordNodePairList</code>.
+     * @param wordNodePairList {@link WordNodePair} {@link ArrayList}.
+     * @param type {@link DependencyOracle} type.
+     */
+
     private void constructDependenciesFromTree(ArrayList<WordNodePair> wordNodePairList, ParserConverterType type) {
         DependencyOracle oracle;
         if (type.equals(ParserConverterType.BASIC_ORACLE)) {
@@ -99,6 +126,11 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
         }
     }
 
+    /**
+     * Changes root's {@link DependencyParser.UniversalDependencyType}.
+     * @param wordNodePairList {@link WordNodePair} {@link ArrayList}.
+     */
+
     private void setRoot(ArrayList<WordNodePair> wordNodePairList) {
         AnnotatedWord last = null;
         for (int i = 0; i < wordNodePairList.size(); i++) {
@@ -112,6 +144,13 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
             last.setUniversalDependency(0, "root");
         }
     }
+
+    /**
+     * Converts {@link ParseTreeDrawable} to {@link AnnotatedSentence}.
+     * @param parseTree {@link ParseTreeDrawable} to convert.
+     * @param type {@link DependencyOracle} type.
+     * @return a {@link AnnotatedSentence}.
+     */
 
     @Override
     public AnnotatedSentence convert(ParseTreeDrawable parseTree, ParserConverterType type) {
