@@ -2,12 +2,18 @@ package StructureConverter.ConstituencyToDependency;/* Created by oguzkeremyildi
 
 public class Decision {
 
+    private final int no;
     private final int to;
     private final String data;
 
-    public Decision(int to, String data) {
+    public Decision(int no, int to, String data) {
+        this.no = no;
         this.to = to;
         this.data = data;
+    }
+
+    public int getNo() {
+        return no;
     }
 
     public int getTo() {

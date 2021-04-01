@@ -194,22 +194,22 @@ public class BasicDependencyOracle implements DependencyOracle {
                     thirdChild = parent.getChild(2).getData().getName();
                 }
                 if (parent.numberOfChildren() == 2 && parentData.equals("S") && firstChild.equals("NP")) {
-                    decisions.add(new Decision(headIndex - i, "NSUBJ"));
+                    decisions.add(new Decision(startIndex + decisions.size(), headIndex - i, "NSUBJ"));
                 } else if (parent.numberOfChildren() == 3 && parentData.equals("S") && firstChild.equals("NP") && secondChild.equals("VP") && Word.isPunctuation(thirdChild)) {
                     if (!wordNodePairList.get(i).getWord().isPunctuation()) {
-                        decisions.add(new Decision(headIndex - i, "NSUBJ"));
+                        decisions.add(new Decision(startIndex + decisions.size(), headIndex - i, "NSUBJ"));
                     } else {
-                        decisions.add(new Decision(headIndex - i, "PUNCT"));
+                        decisions.add(new Decision(startIndex + decisions.size(), headIndex - i, "PUNCT"));
                     }
                 } else {
                     String dependent = wordNodePairList.get(i).getNode().getData().getName();
                     String head = wordNodePairList.get(headIndex).getNode().getData().getName();
                     boolean condition1 = wordNodePairList.get(i).getNode().getData().isPunctuation();
                     boolean condition2 = wordNodePairList.get(headIndex).getNode().getData().isPunctuation();
-                    decisions.add(new Decision(headIndex - i, findData(dependent, head, condition1, condition2, wordNodePairList.get(i).getWord(), wordNodePairList.get(headIndex).getWord())));
+                    decisions.add(new Decision(startIndex + decisions.size(), headIndex - i, findData(dependent, head, condition1, condition2, wordNodePairList.get(i).getWord(), wordNodePairList.get(headIndex).getWord())));
                 }
             } else {
-                decisions.add(new Decision(0, null));
+                decisions.add(new Decision(-1, 0, null));
             }
         }
         return decisions;
@@ -217,6 +217,13 @@ public class BasicDependencyOracle implements DependencyOracle {
 
     @Override
     public ArrayList<Decision> makeDecisions(int firstIndex, int lastIndex, ArrayList<WordNodePair> wordNodePairList, ParseNodeDrawable node) {
+        if (node.numberOfChildren() == 3 && node.getChild(1).getData().getName().equals("CONJP")) {
+            ArrayList<Decision> decisions = new ArrayList<>();
+            decisions.add(new Decision(-1, 0, null));
+            decisions.add(new Decision((lastIndex + firstIndex) / 2, lastIndex - ((lastIndex + firstIndex) / 2), "CC"));
+            decisions.add(new Decision(lastIndex, firstIndex - lastIndex, "CONJ"));
+            return decisions;
+        }
         int headIndex = findHeadIndex(firstIndex, lastIndex, wordNodePairList);
         return setToAndAddUniversalDependency(firstIndex, headIndex, wordNodePairList, lastIndex, node);
     }

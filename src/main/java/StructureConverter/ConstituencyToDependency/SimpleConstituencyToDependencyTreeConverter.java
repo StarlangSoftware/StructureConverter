@@ -55,37 +55,19 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
             if (parseNodeDrawableList.get(i).equals(parseNodeDrawableList.get(i + 1))) {
                 int last = findEndingNode(i, wordNodePairList);
                 if (last - i + 1 == parseNodeDrawableList.get(i).numberOfChildren()) {
-                    if (parseNodeDrawableList.get(i).numberOfChildren() == 3 && parseNodeDrawableList.get(i).getChild(1).getData().getName().equals("CONJP")) {
-                        WordNodePair first = convertParseNodeDrawableToWordNodePair((ParseNodeDrawable) parseNodeDrawableList.get(i).getChild(0), wordNodePairList);
-                        WordNodePair second = convertParseNodeDrawableToWordNodePair((ParseNodeDrawable) parseNodeDrawableList.get(i).getChild(1), wordNodePairList);
-                        WordNodePair third = convertParseNodeDrawableToWordNodePair((ParseNodeDrawable) parseNodeDrawableList.get(i).getChild(2), wordNodePairList);
-                        if (first != null && second != null && third != null) {
-                            second.done();
-                            third.done();
-                            second.getWord().setUniversalDependency(third.getNo(), "CC");
-                            third.getWord().setUniversalDependency(first.getNo(), "CONJ");
-                            if (first.getNode().getParent() != null) {
-                                first.updateNode();
-                                if (first.getNode().getParent() != null && first.getNode().getParent().numberOfChildren() == 1) {
-                                    first.updateNode();
-                                }
-                            }
-                        }
-                    } else {
-                        ArrayList<Decision> decisions = oracle.makeDecisions(i, last, wordNodePairList, parseNodeDrawableList.get(i));
-                        for (int j = 0; j < decisions.size(); j++) {
-                            Decision decision = decisions.get(j);
-                            if (decision.getTo() == 0) {
-                                if (wordNodePairList.get(i + j).getNode().getParent() != null) {
+                    ArrayList<Decision> decisions = oracle.makeDecisions(i, last, wordNodePairList, parseNodeDrawableList.get(i));
+                    for (int j = 0; j < decisions.size(); j++) {
+                        Decision decision = decisions.get(j);
+                        if (decision.getNo() < 0) {
+                            if (wordNodePairList.get(i + j).getNode().getParent() != null) {
+                                wordNodePairList.get(i + j).updateNode();
+                                if (wordNodePairList.get(i + j).getNode().getParent() != null && wordNodePairList.get(i + j).getNode().getParent().numberOfChildren() == 1) {
                                     wordNodePairList.get(i + j).updateNode();
-                                    if (wordNodePairList.get(i + j).getNode().getParent() != null && wordNodePairList.get(i + j).getNode().getParent().numberOfChildren() == 1) {
-                                        wordNodePairList.get(i + j).updateNode();
-                                    }
                                 }
-                            } else {
-                                wordNodePairList.get(i + j).done();
-                                wordNodePairList.get(i + j).getWord().setUniversalDependency(wordNodePairList.get(i + j + decision.getTo()).getNo(), decision.getData());
                             }
+                        } else {
+                            wordNodePairList.get(decision.getNo()).done();
+                            wordNodePairList.get(decision.getNo()).getWord().setUniversalDependency(wordNodePairList.get(decision.getNo() + decision.getTo()).getNo(), decision.getData());
                         }
                     }
                     break;
