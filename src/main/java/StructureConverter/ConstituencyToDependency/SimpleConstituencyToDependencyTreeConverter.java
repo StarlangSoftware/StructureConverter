@@ -28,22 +28,6 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
     }
 
     /**
-     * Converts {@link ParseNodeDrawable} to {@link WordNodePair}.
-     * @param parseNodeDrawable {@link ParseNodeDrawable}.
-     * @param wordNodePairList {@link WordNodePair} {@link ArrayList}.
-     * @return a {@link WordNodePair}.
-     */
-
-    private WordNodePair convertParseNodeDrawableToWordNodePair(ParseNodeDrawable parseNodeDrawable, ArrayList<WordNodePair> wordNodePairList) {
-        for (WordNodePair wordNodePair : wordNodePairList) {
-            if (wordNodePair.getNode().equals(parseNodeDrawable)) {
-                return wordNodePair;
-            }
-        }
-        return null;
-    }
-
-    /**
      * Adds {@link DependencyParser.UniversalDependencyRelation} to <code>wordNodePairList</code>.
      * @param parseNodeDrawableList {@link ParseNodeDrawable} {@link ArrayList}.
      * @param wordNodePairList {@link WordNodePair} {@link ArrayList}.
