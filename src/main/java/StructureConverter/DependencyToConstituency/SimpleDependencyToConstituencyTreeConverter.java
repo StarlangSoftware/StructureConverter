@@ -185,22 +185,6 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
     }
 
     /**
-     * Merges two {@link WordNodePair}s.
-     * @param unionList {@link ArrayList} of those who will merge.
-     * @param treePos treePos of two {@link ParseNodeDrawable}.
-     */
-
-    private void simpleMerge(ArrayList<WordNodePair> unionList, String treePos) {
-        ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol(treePos));
-        for (WordNodePair wordNodePair : unionList) {
-            ParseNodeDrawable parseNodeDrawable = wordNodePair.getNode();
-            if (!containsChild(parent, getParent(parseNodeDrawable))) {
-                parent.addChild(getParent(parseNodeDrawable));
-            }
-        }
-    }
-
-    /**
      * Merges {@link WordNodePair}s in <code>unionlist</code>.
      * @param wordNodePairs {@link WordNodePair} {@link ArrayList} of all words.
      * @param specialsMap priority {@link HashMap}.
@@ -210,46 +194,38 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
 
     private void merge(ArrayList<WordNodePair> wordNodePairs, HashMap<String, Integer> specialsMap, ArrayList<WordNodePair> unionList, int i, ProjectionOracle oracle) {
         updateUnionCandidateLists(unionList, wordNodePairs.get(i));
-        if (unionList.size() == 2) {
-            String treePos = setTreePos(unionList, wordNodePairs.get(i).getTreePos());
-            simpleMerge(unionList, treePos);
-        } else {
-            int index = -1;
-            for (int j = 0; j < unionList.size(); j++) {
-                if (unionList.get(j).equals(wordNodePairs.get(i))) {
-                    index = j;
+        int index = -1;
+        for (int j = 0; j < unionList.size(); j++) {
+            if (unionList.get(j).equals(wordNodePairs.get(i))) {
+                index = j;
+                break;
+            }
+        }
+        ArrayList<SimpleEntry<Command, String>> list = oracle.makeCommands(specialsMap, unionList, index);
+        ArrayList<WordNodePair> currentUnionList = new ArrayList<>();
+        currentUnionList.add(unionList.get(index));
+        int leftIndex = 0, rightIndex = 0, iterate = 0;
+        while (iterate < list.size()) {
+            Command command = list.get(iterate).getKey();
+            switch (command) {
+                case MERGE:
+                    String treePos = list.get(iterate).getValue();
+                    mergeNodes(currentUnionList, treePos);
+                    currentUnionList.clear();
+                    currentUnionList.add(unionList.get(index));
                     break;
-                }
+                case LEFT:
+                    leftIndex++;
+                    updateUnionCandidateLists(currentUnionList, unionList.get(index - leftIndex));
+                    break;
+                case RIGHT:
+                    rightIndex++;
+                    updateUnionCandidateLists(currentUnionList, unionList.get(index + rightIndex));
+                    break;
+                default:
+                    break;
             }
-            ArrayList<SimpleEntry<Command, String>> list = oracle.makeCommands(specialsMap, unionList, index);
-            ArrayList<WordNodePair> currentUnionList = new ArrayList<>();
-            currentUnionList.add(unionList.get(index));
-            int leftIndex = 0, rightIndex = 0, iterate = 0;
-            while (iterate < list.size()) {
-                Command command = list.get(iterate).getKey();
-                switch (command) {
-                    case MERGE:
-                        String treePos = setTreePos(unionList, unionList.get(index).getTreePos());
-                        if (list.get(iterate).getValue() != null) {
-                            treePos = list.get(iterate).getValue();
-                        }
-                        mergeNodes(currentUnionList, treePos);
-                        currentUnionList.clear();
-                        currentUnionList.add(unionList.get(index));
-                        break;
-                    case LEFT:
-                        leftIndex++;
-                        updateUnionCandidateLists(currentUnionList, unionList.get(index - leftIndex));
-                        break;
-                    case RIGHT:
-                        rightIndex++;
-                        updateUnionCandidateLists(currentUnionList, unionList.get(index + rightIndex));
-                        break;
-                    default:
-                        break;
-                }
-                iterate++;
-            }
+            iterate++;
         }
     }
 
@@ -268,23 +244,6 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                 }
             }
         }
-    }
-
-    /**
-     * Finds treePos of {@link ParseNodeDrawable}s.
-     * @param list {@link WordNodePair} {@link ArrayList}.
-     * @param currentPos head's pos tag.
-     * @return a pos tag.
-     */
-
-    private String setTreePos(ArrayList<WordNodePair> list, String currentPos) {
-        String treePos = currentPos;
-        for (WordNodePair current : list) {
-            if (current != null && current.getTreePos().equals("PP")) {
-                treePos = current.getTreePos();
-            }
-        }
-        return treePos;
     }
 
     /**

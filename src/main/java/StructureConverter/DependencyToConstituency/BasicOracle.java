@@ -50,7 +50,7 @@ public class BasicOracle implements ProjectionOracle {
             commands.add(new SimpleEntry<>(Command.LEFT, null));
             i++;
         }
-        commands.add(new SimpleEntry<>(Command.MERGE, null));
+        commands.add(new SimpleEntry<>(Command.MERGE, setTreePos(unionList, unionList.get(currentIndex).getTreePos())));
         return i;
     }
 
@@ -94,7 +94,7 @@ public class BasicOracle implements ProjectionOracle {
             commands.add(new SimpleEntry<>(Command.LEFT, null));
             i++;
         }
-        commands.add(new SimpleEntry<>(Command.MERGE, null));
+        commands.add(new SimpleEntry<>(Command.MERGE, setTreePos(unionList, unionList.get(currentIndex).getTreePos())));
     }
 
     private boolean containsWordNodePair(ArrayList<WordNodePair> unionList, int wordNodePairNo) {
@@ -130,57 +130,102 @@ public class BasicOracle implements ProjectionOracle {
         return i;
     }
 
-    @Override
-    public ArrayList<SimpleEntry<Command, String>> makeCommands(HashMap<String, Integer> specialsMap, ArrayList<WordNodePair> unionList, int currentIndex) {
-        int i = 1, j = 1, specialIndex = -1;
-        ArrayList<SimpleEntry<Command, String>> commands = new ArrayList<>();
-        while (currentIndex - i > -1 || currentIndex + j < unionList.size()) {
-            if (currentIndex - i > -1 && currentIndex + j < unionList.size()) {
-                int comparisonResult = compareTo(unionList.get(currentIndex - i), unionList.get(currentIndex + j), specialsMap);
-                if (comparisonResult > 0) {
-                    i = addCommandsForLeft(currentIndex, i, unionList, specialsMap, commands);
-                } else if (comparisonResult < 0) {
-                    commands.add(new SimpleEntry<>(Command.RIGHT, null));
-                    commands.add(new SimpleEntry<>(Command.MERGE, null));
-                    j++;
+    private String setTreePos(ArrayList<WordNodePair> list, String currentPos) {
+        String treePos = currentPos;
+        for (WordNodePair current : list) {
+            if (current != null && current.getTreePos().equals("PP")) {
+                treePos = current.getTreePos();
+            }
+        }
+        return treePos;
+    }
+
+    private ArrayList<SimpleEntry<Command, String>> simpleMerge(ArrayList<WordNodePair> unionList, String treePos, int index) {
+        ArrayList<SimpleEntry<Command, String>> list = new ArrayList<>();
+        for (int i = 0; i < unionList.size(); i++) {
+            if (index != i) {
+                if (i > index) {
+                    list.add(new SimpleEntry<>(Command.RIGHT, null));
                 } else {
-                    if (!specialsMap.containsKey(unionList.get(currentIndex - i).getUniversalDependency()) && !specialsMap.containsKey(unionList.get(currentIndex + j).getUniversalDependency())) {
-                        break;
-                    } else {
-                        commands.add(new SimpleEntry<>(Command.LEFT, null));
-                        commands.add(new SimpleEntry<>(Command.RIGHT, null));
-                        commands.add(new SimpleEntry<>(Command.MERGE, null));
-                        i++;
-                        j++;
-                    }
-                }
-            } else if (currentIndex - i > -1) {
-                if (specialsMap.containsKey(unionList.get(currentIndex - i).getUniversalDependency())) {
-                    i = addCommandsForLeft(currentIndex, i, unionList, specialsMap, commands);
-                } else {
-                    if (unionList.get(currentIndex - i).getUniversalDependency().equals("NSUBJ") || unionList.get(currentIndex - i).getUniversalDependency().equals("CSUBJ")) {
-                        specialIndex = currentIndex - i;
-                    }
-                    break;
-                }
-            } else {
-                if (specialsMap.containsKey(unionList.get(currentIndex + j).getUniversalDependency())) {
-                    commands.add(new SimpleEntry<>(Command.RIGHT, null));
-                    commands.add(new SimpleEntry<>(Command.MERGE, null));
-                    j++;
-                } else {
-                    break;
+                    list.add(new SimpleEntry<>(Command.LEFT, null));
                 }
             }
         }
-        if (specialIndex == -1) {
-            specialIndex = findSpecialIndex(unionList, currentIndex);
-        }
-        if (specialIndex > -1 && containsWordNodePair(unionList, unionList.get(specialIndex).getTo() - 1)) {
-            if (currentIndex > specialIndex) {
-                addSpecialForLeft(unionList, commands, i, j, currentIndex);
+        list.add(new SimpleEntry<>(Command.MERGE, treePos));
+        return list;
+    }
+
+    @Override
+    public ArrayList<SimpleEntry<Command, String>> makeCommands(HashMap<String, Integer> specialsMap, ArrayList<WordNodePair> unionList, int currentIndex) {
+        String treePos = setTreePos(unionList, unionList.get(currentIndex).getTreePos());
+        if (unionList.size() > 2) {
+            int i = 1, j = 1, specialIndex = -1;
+            ArrayList<SimpleEntry<Command, String>> commands = new ArrayList<>();
+            while (currentIndex - i > -1 || currentIndex + j < unionList.size()) {
+                if (currentIndex - i > -1 && currentIndex + j < unionList.size()) {
+                    int comparisonResult = compareTo(unionList.get(currentIndex - i), unionList.get(currentIndex + j), specialsMap);
+                    if (comparisonResult > 0) {
+                        i = addCommandsForLeft(currentIndex, i, unionList, specialsMap, commands);
+                    } else if (comparisonResult < 0) {
+                        commands.add(new SimpleEntry<>(Command.RIGHT, null));
+                        commands.add(new SimpleEntry<>(Command.MERGE, treePos));
+                        j++;
+                    } else {
+                        if (!specialsMap.containsKey(unionList.get(currentIndex - i).getUniversalDependency()) && !specialsMap.containsKey(unionList.get(currentIndex + j).getUniversalDependency())) {
+                            break;
+                        } else {
+                            commands.add(new SimpleEntry<>(Command.LEFT, null));
+                            commands.add(new SimpleEntry<>(Command.RIGHT, null));
+                            commands.add(new SimpleEntry<>(Command.MERGE, treePos));
+                            i++;
+                            j++;
+                        }
+                    }
+                } else if (currentIndex - i > -1) {
+                    if (specialsMap.containsKey(unionList.get(currentIndex - i).getUniversalDependency())) {
+                        i = addCommandsForLeft(currentIndex, i, unionList, specialsMap, commands);
+                    } else {
+                        if (unionList.get(currentIndex - i).getUniversalDependency().equals("NSUBJ") || unionList.get(currentIndex - i).getUniversalDependency().equals("CSUBJ")) {
+                            specialIndex = currentIndex - i;
+                        }
+                        break;
+                    }
+                } else {
+                    if (specialsMap.containsKey(unionList.get(currentIndex + j).getUniversalDependency())) {
+                        commands.add(new SimpleEntry<>(Command.RIGHT, null));
+                        commands.add(new SimpleEntry<>(Command.MERGE, treePos));
+                        j++;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            if (specialIndex == -1) {
+                specialIndex = findSpecialIndex(unionList, currentIndex);
+            }
+            if (specialIndex > -1 && containsWordNodePair(unionList, unionList.get(specialIndex).getTo() - 1)) {
+                if (currentIndex > specialIndex) {
+                    addSpecialForLeft(unionList, commands, i, j, currentIndex);
+                } else {
+                    // temporary solution
+                    i = finalCommandsForObjects(unionList, currentIndex, i, commands);
+                    boolean check = false;
+                    while (currentIndex + j < unionList.size()) {
+                        check = true;
+                        commands.add(new SimpleEntry<>(Command.RIGHT, null));
+                        j++;
+                    }
+                    while (currentIndex - i > -1) {
+                        check = true;
+                        commands.add(new SimpleEntry<>(Command.LEFT, null));
+                        i++;
+                    }
+                    if (check) {
+                        commands.add(new SimpleEntry<>(Command.MERGE, treePos));
+                    }
+                    // temporary solution
+                }
             } else {
-                // temporary solution
                 i = finalCommandsForObjects(unionList, currentIndex, i, commands);
                 boolean check = false;
                 while (currentIndex + j < unionList.size()) {
@@ -194,27 +239,11 @@ public class BasicOracle implements ProjectionOracle {
                     i++;
                 }
                 if (check) {
-                    commands.add(new SimpleEntry<>(Command.MERGE, null));
+                    commands.add(new SimpleEntry<>(Command.MERGE, treePos));
                 }
-                // temporary solution
             }
-        } else {
-            i = finalCommandsForObjects(unionList, currentIndex, i, commands);
-            boolean check = false;
-            while (currentIndex + j < unionList.size()) {
-                check = true;
-                commands.add(new SimpleEntry<>(Command.RIGHT, null));
-                j++;
-            }
-            while (currentIndex - i > -1) {
-                check = true;
-                commands.add(new SimpleEntry<>(Command.LEFT, null));
-                i++;
-            }
-            if (check) {
-                commands.add(new SimpleEntry<>(Command.MERGE, null));
-            }
+            return commands;
         }
-        return commands;
+        return simpleMerge(unionList, treePos, currentIndex);
     }
 }
