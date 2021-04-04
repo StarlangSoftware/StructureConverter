@@ -1,11 +1,25 @@
-package StructureConverter.DependencyToConstituency;/* Created by oguzkeremyildiz on 2.02.2021 */
+package StructureConverter.DependencyToConstituency;/* Created by oguzkeremyildiz on 4.04.2021 */
 
 import StructureConverter.WordNodePair;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.AbstractMap.SimpleEntry;
 
-public interface ProjectionOracle {
-    ArrayList<SimpleEntry<Command, String>> makeCommands(HashMap<String, Integer> specialsMap, ArrayList<WordNodePair> unionList, int currentIndex);
+public abstract class ProjectionOracle {
+
+    public ProjectionOracle() {
+    }
+
+    protected String setTreePos(ArrayList<WordNodePair> list, String currentPos) {
+        String treePos = currentPos;
+        for (WordNodePair current : list) {
+            if (current != null && current.getTreePos().equals("PP")) {
+                treePos = current.getTreePos();
+            }
+        }
+        return treePos;
+    }
+
+    public abstract ArrayList<AbstractMap.SimpleEntry<Command, String>> makeCommands(HashMap<String, Integer> specialsMap, ArrayList<WordNodePair> unionList, int currentIndex);
 }

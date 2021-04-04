@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.AbstractMap.SimpleEntry;
 
-public class BasicOracle implements ProjectionOracle {
+public class BasicOracle extends ProjectionOracle {
 
     /**
      * @param first first {@link WordNodePair}.
@@ -128,16 +128,6 @@ public class BasicOracle implements ProjectionOracle {
             }
         }
         return i;
-    }
-
-    private String setTreePos(ArrayList<WordNodePair> list, String currentPos) {
-        String treePos = currentPos;
-        for (WordNodePair current : list) {
-            if (current != null && current.getTreePos().equals("PP")) {
-                treePos = current.getTreePos();
-            }
-        }
-        return treePos;
     }
 
     private ArrayList<SimpleEntry<Command, String>> simpleMerge(ArrayList<WordNodePair> unionList, String treePos, int index) {
