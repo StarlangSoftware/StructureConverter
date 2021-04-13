@@ -2,6 +2,7 @@ package StructureConverter.DependencyToConstituency;/* Created by oguzkeremyildi
 
 import StructureConverter.WordNodePair;
 
+import java.io.FileNotFoundException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,5 +22,5 @@ public abstract class ProjectionOracle {
         return treePos;
     }
 
-    public abstract ArrayList<AbstractMap.SimpleEntry<Command, String>> makeCommands(HashMap<String, Integer> specialsMap, ArrayList<WordNodePair> unionList, int currentIndex);
+    public abstract ArrayList<AbstractMap.SimpleEntry<Command, String>> makeCommands(HashMap<String, Integer> specialsMap, ArrayList<WordNodePair> unionList, int currentIndex) throws FileNotFoundException;
 }

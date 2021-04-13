@@ -37,6 +37,13 @@ public class WordNodePair {
         this.no = no;
     }
 
+    public WordNodePair(AnnotatedWord annotatedWord, ParseNodeDrawable parseNodeDrawable, int no) {
+        this.node = parseNodeDrawable;
+        this.annotatedWord = annotatedWord;
+        this.done = false;
+        this.no = no;
+    }
+
     public String getWordName() {
         return annotatedWord.getName();
     }
