@@ -91,9 +91,9 @@ public class ClassifierOracle extends ProjectionOracle {
         for (int i = 0; i < unionList.size(); i++) {
             testData[i] = unionList.get(i).getWord().getParse().getPos();
             if (i != currentIndex) {
-                testData[unionList.size() + (unionList.size() * iterate)] = Integer.toString(i);
-                testData[unionList.size() + (unionList.size() * iterate) + 1] = Integer.toString(currentIndex);
-                testData[unionList.size() + (unionList.size() * iterate) + 2] = unionList.get(i).getUniversalDependency();
+                testData[unionList.size() + (3 * iterate)] = Integer.toString(i);
+                testData[unionList.size() + (3 * iterate) + 1] = Integer.toString(currentIndex);
+                testData[unionList.size() + (3 * iterate) + 2] = unionList.get(i).getUniversalDependency();
                 iterate++;
             }
         }
