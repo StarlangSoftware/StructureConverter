@@ -2,8 +2,10 @@ package StructureConverter.DependencyToConstituency;/* Created by oguzkeremyildi
 
 import DataStructure.CounterHashMap;
 import StructureConverter.WordNodePair;
+import Util.FileUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +19,7 @@ public class ClassifierOracle extends ProjectionOracle {
     public ClassifierOracle() {
         dataList = new ArrayList<>();
         try {
-            Scanner source = new Scanner(new File("dataset.txt"));
+            Scanner source = new Scanner(FileUtils.getInputStream("DepToCons/dataset.txt"));
             while (source.hasNext()) {
                 String line = source.nextLine();
                 dataList.add(line.split(" "));
@@ -27,10 +29,10 @@ public class ClassifierOracle extends ProjectionOracle {
         }
     }
 
-    private String testKnn(String[] testData, int pathName, int length1, int length2) throws FileNotFoundException{
+    private String testKnn(String[] testData, int pathName, int length1, int length2) {
         CounterHashMap<String> counts = new CounterHashMap<>();
         String[][] trainData = new String[length1][length2];
-        Scanner input = new Scanner(new File(pathName + ".txt"));
+        Scanner input = new Scanner(FileUtils.getInputStream("DepToCons/" + pathName + ".txt"));
         for (int i = 0; i < length1; i++){
             String[] items = input.nextLine().split(" ");
             for (int j = 0; j < length2; j++){
