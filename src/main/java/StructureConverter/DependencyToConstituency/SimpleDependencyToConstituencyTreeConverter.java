@@ -316,7 +316,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
             int j = 0;
             ArrayList<WordNodePair> unionList = new ArrayList<>();
             do {
-                if (!wordNodePairs.get(j).isFinished()) {
+                if (!wordNodePairs.get(j).isDoneForHead()) {
                     SimpleEntry<ArrayList<WordNodePair>, Boolean> simpleEntry = setOfNodesToBeMergedOntoNode(wordNodePairs, wordNodePairs.get(j));
                     unionList = simpleEntry.getKey();
                     boolean isFinished = simpleEntry.getValue();
@@ -332,7 +332,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                     break;
                 }
             } while (true);
-            wordNodePairs.get(j - 1).finished();
+            wordNodePairs.get(j - 1).doneForHead();
             if (unionList.size() > 0) {
                 merge(wordNodePairs, specialsMap, unionList, j - 1, type);
             } else {
