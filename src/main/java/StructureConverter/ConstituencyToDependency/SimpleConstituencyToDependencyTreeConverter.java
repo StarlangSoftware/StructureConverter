@@ -31,14 +31,20 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
      * Adds {@link DependencyParser.UniversalDependencyRelation} to <code>wordNodePairList</code>.
      * @param parseNodeDrawableList {@link ParseNodeDrawable} {@link ArrayList}.
      * @param wordNodePairList {@link WordNodePair} {@link ArrayList}.
-     * @param oracle {@link DependencyOracle}.
+     * @param type {@link DependencyOracle} type.
      */
 
-    private void addUniversalDependency(ArrayList<ParseNodeDrawable> parseNodeDrawableList, ArrayList<WordNodePair> wordNodePairList, DependencyOracle oracle) {
+    private void addUniversalDependency(ArrayList<ParseNodeDrawable> parseNodeDrawableList, ArrayList<WordNodePair> wordNodePairList, ParserConverterType type) {
         for (int i = 0; i < parseNodeDrawableList.size() - 1; i++) {
             if (parseNodeDrawableList.get(i).equals(parseNodeDrawableList.get(i + 1))) {
                 int last = findEndingNode(i, wordNodePairList);
                 if (last - i + 1 == parseNodeDrawableList.get(i).numberOfChildren()) {
+                    DependencyOracle oracle;
+                    if (type.equals(ParserConverterType.BASIC_ORACLE) || last - i + 1 > 7) {
+                        oracle = new BasicDependencyOracle();
+                    } else {
+                        oracle = new ClassifierDependencyOracle();
+                    }
                     ArrayList<Decision> decisions = oracle.makeDecisions(i, last, wordNodePairList, parseNodeDrawableList.get(i));
                     for (int j = 0; j < decisions.size(); j++) {
                         Decision decision = decisions.get(j);
@@ -67,12 +73,6 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
      */
 
     private void constructDependenciesFromTree(ArrayList<WordNodePair> wordNodePairList, ParserConverterType type) {
-        DependencyOracle oracle;
-        if (type.equals(ParserConverterType.BASIC_ORACLE)) {
-            oracle = new BasicDependencyOracle();
-        } else {
-            oracle = new ClassifierDependencyOracle();
-        }
         setRoot(wordNodePairList);
         ArrayList<ParseNodeDrawable> parseNodeDrawableList = new ArrayList<>();
         ArrayList<WordNodePair> wordNodePairs = new ArrayList<>(wordNodePairList);
@@ -80,7 +80,7 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
             parseNodeDrawableList.add((ParseNodeDrawable) wordNodePair.getNode().getParent());
         }
         while (parseNodeDrawableList.size() > 1) {
-            addUniversalDependency(parseNodeDrawableList, wordNodePairs, oracle);
+            addUniversalDependency(parseNodeDrawableList, wordNodePairs, type);
             parseNodeDrawableList.clear();
             wordNodePairs.clear();
             for (WordNodePair wordNodePair : wordNodePairList) {
