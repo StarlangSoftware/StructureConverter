@@ -2,8 +2,9 @@ package StructureConverter.ConstituencyToDependency;
 
 import AnnotatedSentence.AnnotatedSentence;
 import AnnotatedTree.ParseTreeDrawable;
+import StructureConverter.MorphologicalAnalysisNotExistsException;
 import StructureConverter.ParserConverterType;
 
 public interface ConstituencyToDependencyTreeConverter {
-    AnnotatedSentence convert(ParseTreeDrawable parseTree, ParserConverterType type);
+    AnnotatedSentence convert(ParseTreeDrawable parseTree, ParserConverterType type) throws MorphologicalAnalysisNotExistsException;
 }

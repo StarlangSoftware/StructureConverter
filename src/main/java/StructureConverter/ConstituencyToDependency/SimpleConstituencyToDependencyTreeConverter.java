@@ -5,6 +5,7 @@ import AnnotatedTree.ParseNodeDrawable;
 import AnnotatedTree.ParseTreeDrawable;
 import AnnotatedTree.Processor.Condition.IsLeafNode;
 import AnnotatedTree.Processor.NodeDrawableCollector;
+import StructureConverter.MorphologicalAnalysisNotExistsException;
 import StructureConverter.ParserConverterType;
 import StructureConverter.WordNodePair;
 
@@ -119,7 +120,7 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
      */
 
     @Override
-    public AnnotatedSentence convert(ParseTreeDrawable parseTree, ParserConverterType type) {
+    public AnnotatedSentence convert(ParseTreeDrawable parseTree, ParserConverterType type) throws MorphologicalAnalysisNotExistsException {
         if (parseTree != null) {
             AnnotatedSentence annotatedSentence = new AnnotatedSentence();
             NodeDrawableCollector nodeDrawableCollector = new NodeDrawableCollector((ParseNodeDrawable) parseTree.getRoot(), new IsLeafNode());
@@ -128,6 +129,9 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
             for (int i = 0; i < leafList.size(); i++) {
                 ParseNodeDrawable parseNode = leafList.get(i);
                 WordNodePair wordNodePair = new WordNodePair(parseNode, i + 1);
+                if (wordNodePair.getWord().getParse() == null) {
+                    throw new MorphologicalAnalysisNotExistsException(parseTree.getFileDescription().getFileName());
+                }
                 wordNodePair.updateNode();
                 if (wordNodePair.getNode().getParent() != null && wordNodePair.getNode().getParent().numberOfChildren() == 1) {
                     wordNodePair.updateNode();

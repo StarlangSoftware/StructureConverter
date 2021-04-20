@@ -1,10 +1,13 @@
 package StructureConverter.ConstituencyToDependency;/* Created by oguzkeremyildiz on 6.02.2021 */
 
+import AnnotatedSentence.AnnotatedWord;
 import AnnotatedTree.ParseNodeDrawable;
 import DataStructure.CounterHashMap;
+import MorphologicalAnalysis.MorphologicalTag;
 import StructureConverter.WordNodePair;
 import Util.FileUtils;
 
+import java.util.AbstractMap;
 import java.util.AbstractMap.*;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -79,23 +82,27 @@ public class ClassifierDependencyOracle implements DependencyOracle {
         return null;
     }
 
-    private boolean contains(int i, ArrayList<Decision> list) {
-        for (Decision entry : list) {
-            if (entry.getNo() == i) {
+    private boolean contains(int i, ArrayList<AbstractMap.SimpleEntry<Integer, Integer>> list) {
+        for (AbstractMap.SimpleEntry<Integer, Integer> entry : list) {
+            if (entry.getKey() == i) {
                 return true;
             }
         }
         return false;
     }
 
-    private void addHeadToDecisions(ArrayList<Decision> decisions, int first, int last) {
+    private int findHeadIndex(ArrayList<AbstractMap.SimpleEntry<Integer, Integer>> list, int first, int last) {
         int index = -1;
-        for (int i = first; i <= last; i++) {
-            if (!contains(i, decisions)) {
+        for (int i = 0; i <= Math.abs(last - first); i++) {
+            if (!contains(i, list)) {
                 index = i;
                 break;
             }
         }
+        return index + first;
+    }
+
+    private void addHeadToDecisions(ArrayList<Decision> decisions, int index) {
         for (int i = 0; i < decisions.size(); i++) {
             if (i == 0) {
                 if (decisions.get(i).getNo() > index) {
@@ -155,13 +162,44 @@ public class ClassifierDependencyOracle implements DependencyOracle {
             default:
                 break;
         }
+        int headIndex = findHeadIndex(list, firstIndex, lastIndex);
         for (int i = 0; i < Objects.requireNonNull(list).size(); i++) {
-            String[] posDatas = new String[2];
-            posDatas[0] = wordNodePairList.get(firstIndex + list.get(i).getKey()).getWord().getParse().getPos();
-            posDatas[1] = wordNodePairList.get(firstIndex + list.get(i).getValue()).getWord().getParse().getPos();
-            decisions.add(new Decision(firstIndex + list.get(i).getKey(), list.get(i).getValue() - list.get(i).getKey(), testKnn(posDatas, "posNames", 47703, 3)));
+            String[] posDatas = new String[25];
+            AnnotatedWord fromWord = wordNodePairList.get(firstIndex + list.get(i).getKey()).getWord();
+            AnnotatedWord toWord = wordNodePairList.get(firstIndex + list.get(i).getValue()).getWord();
+            AnnotatedWord headWord = wordNodePairList.get(headIndex).getWord();
+            posDatas[0] = fromWord.getParse().getPos();
+            posDatas[1] = fromWord.getParse().getRootPos();
+            posDatas[2] = Boolean.toString(fromWord.getParse().containsTag(MorphologicalTag.ABLATIVE));
+            posDatas[3] = Boolean.toString(fromWord.getParse().containsTag(MorphologicalTag.DATIVE));
+            posDatas[4] = Boolean.toString(fromWord.getParse().containsTag(MorphologicalTag.GENITIVE));
+            posDatas[5] = Boolean.toString(fromWord.getParse().containsTag(MorphologicalTag.NOMINATIVE));
+            posDatas[6] = Boolean.toString(fromWord.getParse().containsTag(MorphologicalTag.ACCUSATIVE));
+            posDatas[7] = Boolean.toString(fromWord.getParse().containsTag(MorphologicalTag.PROPERNOUN));
+            posDatas[8] = toWord.getParse().getPos();
+            posDatas[9] = toWord.getParse().getRootPos();
+            posDatas[10] = Boolean.toString(toWord.getParse().containsTag(MorphologicalTag.ABLATIVE));
+            posDatas[11] = Boolean.toString(toWord.getParse().containsTag(MorphologicalTag.DATIVE));
+            posDatas[12] = Boolean.toString(toWord.getParse().containsTag(MorphologicalTag.GENITIVE));
+            posDatas[13] = Boolean.toString(toWord.getParse().containsTag(MorphologicalTag.NOMINATIVE));
+            posDatas[14] = Boolean.toString(toWord.getParse().containsTag(MorphologicalTag.ACCUSATIVE));
+            posDatas[15] = Boolean.toString(toWord.getParse().containsTag(MorphologicalTag.PROPERNOUN));
+            posDatas[16] = headWord.getParse().getPos();
+            posDatas[17] = headWord.getParse().getRootPos();
+            posDatas[18] = Boolean.toString(headWord.getParse().containsTag(MorphologicalTag.ABLATIVE));
+            posDatas[19] = Boolean.toString(headWord.getParse().containsTag(MorphologicalTag.DATIVE));
+            posDatas[20] = Boolean.toString(headWord.getParse().containsTag(MorphologicalTag.GENITIVE));
+            posDatas[21] = Boolean.toString(headWord.getParse().containsTag(MorphologicalTag.NOMINATIVE));
+            posDatas[22] = Boolean.toString(headWord.getParse().containsTag(MorphologicalTag.ACCUSATIVE));
+            posDatas[23] = Boolean.toString(headWord.getParse().containsTag(MorphologicalTag.PROPERNOUN));
+            if (fromWord.getSemantic() == null || headWord.getSemantic() == null) {
+                posDatas[24] = "null";
+            } else {
+                posDatas[24] = Boolean.toString(fromWord.getSemantic().equals(headWord.getSemantic()));
+            }
+            decisions.add(new Decision(firstIndex + list.get(i).getKey(), list.get(i).getValue() - list.get(i).getKey(), testKnn(posDatas, "posNames", 47703, 26)));
         }
-        addHeadToDecisions(decisions, firstIndex, lastIndex);
+        addHeadToDecisions(decisions, headIndex);
         return decisions;
     }
 }
