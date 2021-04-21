@@ -2,6 +2,7 @@ package StructureConverter.ConstituencyToDependency;/* Created by oguzkeremyildi
 
 import AnnotatedSentence.AnnotatedWord;
 import AnnotatedTree.ParseNodeDrawable;
+import Classification.Model.Model;
 import Dictionary.Word;
 import MorphologicalAnalysis.MorphologicalTag;
 import StructureConverter.WordNodePair;
@@ -216,7 +217,7 @@ public class BasicDependencyOracle implements DependencyOracle {
     }
 
     @Override
-    public ArrayList<Decision> makeDecisions(int firstIndex, int lastIndex, ArrayList<WordNodePair> wordNodePairList, ParseNodeDrawable node) {
+    public ArrayList<Decision> makeDecisions(int firstIndex, int lastIndex, ArrayList<WordNodePair> wordNodePairList, ParseNodeDrawable node, Model model) {
         if (node.numberOfChildren() == 3 && node.getChild(1).getData().getName().equals("CONJP")) {
             ArrayList<Decision> decisions = new ArrayList<>();
             decisions.add(new Decision(-1, 0, null));

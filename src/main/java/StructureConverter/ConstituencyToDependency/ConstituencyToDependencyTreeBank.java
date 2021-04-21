@@ -16,7 +16,7 @@ public class ConstituencyToDependencyTreeBank {
         AnnotatedCorpus annotatedCorpus = new AnnotatedCorpus();
         for (int i = 0; i < treeBank.size(); i++){
             try {
-                annotatedCorpus.addSentence(constituencyToDependencyTreeConverter.convert(treeBank.get(i), ParserConverterType.BASIC_ORACLE));
+                annotatedCorpus.addSentence(constituencyToDependencyTreeConverter.convert(treeBank.get(i), null));
             } catch (MorphologicalAnalysisNotExistsException ignored) {}
         }
         return annotatedCorpus;
