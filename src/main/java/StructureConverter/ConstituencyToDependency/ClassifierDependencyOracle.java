@@ -5,14 +5,11 @@ import AnnotatedTree.ParseNodeDrawable;
 import Classification.Attribute.Attribute;
 import Classification.Attribute.DiscreteAttribute;
 import Classification.Instance.Instance;
-import Classification.Model.Model;
 import Classification.Model.TreeEnsembleModel;
-import DataStructure.CounterHashMap;
 import MorphologicalAnalysis.MorphologicalTag;
 import StructureConverter.WordNodePair;
 import Util.FileUtils;
 
-import java.io.*;
 import java.util.AbstractMap;
 import java.util.AbstractMap.*;
 import java.util.ArrayList;
@@ -34,43 +31,6 @@ public class ClassifierDependencyOracle implements DependencyOracle {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    private String testKnn(String[] testData, String pathName, int length1, int length2) {
-        CounterHashMap<String> counts = new CounterHashMap<>();
-        String[][] trainData = new String[length1][length2];
-        Scanner input = new Scanner(FileUtils.getInputStream("ConsToDep/" + pathName + ".txt"));
-        for (int i = 0; i < length1; i++){
-            String[] items = input.nextLine().split(" ");
-            for (int j = 0; j < length2; j++){
-                trainData[i][j] = items[j];
-            }
-        }
-        input.close();
-        int minDistance = length2 - 1;
-        for (int i = 0; i < length1; i++){
-            int count = 0;
-            for (int j = 0; j < length2 - 1; j++){
-                if (!testData[j].equals(trainData[i][j])){
-                    count++;
-                }
-            }
-            if (count < minDistance){
-                minDistance = count;
-            }
-        }
-        for (int i = 0; i < length1; i++){
-            int count = 0;
-            for (int j = 0; j < length2 - 1; j++){
-                if (!testData[j].equals(trainData[i][j])){
-                    count++;
-                }
-            }
-            if (count == minDistance){
-                counts.put(trainData[i][length2 - 1]);
-            }
-        }
-        return counts.max();
     }
 
     private ArrayList<SimpleEntry<Integer, Integer>> findList(int length, String classInfo) {
@@ -132,37 +92,37 @@ public class ClassifierDependencyOracle implements DependencyOracle {
     }
 
     @Override
-    public ArrayList<Decision> makeDecisions(int firstIndex, int lastIndex, ArrayList<WordNodePair> wordNodePairList, ParseNodeDrawable node, Model model) {
-        String[] testData = new String[lastIndex + 1 - firstIndex];
+    public ArrayList<Decision> makeDecisions(int firstIndex, int lastIndex, ArrayList<WordNodePair> wordNodePairList, ParseNodeDrawable node, ArrayList<TreeEnsembleModel> models) {
+        ArrayList<Attribute> testData = new ArrayList<>(lastIndex + 1 - firstIndex);
         String classInfo;
         ArrayList<SimpleEntry<Integer, Integer>> list = new ArrayList<>();
         ArrayList<Decision> decisions = new ArrayList<>();
-        for (int i = 0; i < testData.length; i++) {
-            testData[i] = wordNodePairList.get(firstIndex + i).getWord().getParse().getPos();
+        for (int i = 0; i < lastIndex + 1 - firstIndex; i++) {
+            testData.add(new DiscreteAttribute(wordNodePairList.get(firstIndex + i).getWord().getParse().getPos()));
         }
         switch (lastIndex + 1 - firstIndex) {
             case 2:
-                classInfo = testKnn(testData, "2", 22940, 3);
+                classInfo = models.get(1).predict(new Instance("", testData));
                 list = findList(2, classInfo);
                 break;
             case 3:
-                classInfo = testKnn(testData, "3", 8062, 4);
+                classInfo = models.get(2).predict(new Instance("", testData));
                 list = findList(3, classInfo);
                 break;
             case 4:
-                classInfo = testKnn(testData, "4", 1667, 5);
+                classInfo = models.get(3).predict(new Instance("", testData));
                 list = findList(4, classInfo);
                 break;
             case 5:
-                classInfo = testKnn(testData, "5", 598, 6);
+                classInfo = models.get(4).predict(new Instance("", testData));
                 list = findList(5, classInfo);
                 break;
             case 6:
-                classInfo = testKnn(testData, "6", 167, 7);
+                classInfo = models.get(5).predict(new Instance("", testData));
                 list = findList(6, classInfo);
                 break;
             case 7:
-                classInfo = testKnn(testData, "7", 60, 8);
+                classInfo = models.get(6).predict(new Instance("", testData));
                 list = findList(7, classInfo);
                 break;
             default:
@@ -217,7 +177,7 @@ public class ClassifierDependencyOracle implements DependencyOracle {
             attributes.add(new DiscreteAttribute(firstChild));
             attributes.add(new DiscreteAttribute(secondChild));
             attributes.add(new DiscreteAttribute(thirdChild));
-            decisions.add(new Decision(firstIndex + list.get(i).getKey(), list.get(i).getValue() - list.get(i).getKey(), model.predict(new Instance("", attributes))));
+            decisions.add(new Decision(firstIndex + list.get(i).getKey(), list.get(i).getValue() - list.get(i).getKey(), models.get(0).predict(new Instance("", attributes))));
         }
         addHeadToDecisions(decisions, headIndex);
         return decisions;
