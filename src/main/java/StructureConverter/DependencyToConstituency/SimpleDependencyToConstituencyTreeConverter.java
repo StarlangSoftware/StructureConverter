@@ -3,6 +3,7 @@ package StructureConverter.DependencyToConstituency;
 import AnnotatedSentence.*;
 import AnnotatedTree.ParenthesisInLayerException;
 import AnnotatedTree.ParseNodeDrawable;
+import Classification.Model.TreeEnsembleModel;
 import ParseTree.*;
 import ParseTree.ParseTree;
 import StructureConverter.*;
@@ -194,7 +195,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
      * @param i index of headWord.
      */
 
-    private void merge(ArrayList<WordNodePair> wordNodePairs, HashMap<String, Integer> specialsMap, ArrayList<WordNodePair> unionList, int i, ParserConverterType type) throws FileNotFoundException {
+    private void merge(ArrayList<WordNodePair> wordNodePairs, HashMap<String, Integer> specialsMap, ArrayList<WordNodePair> unionList, int i, ArrayList<TreeEnsembleModel> models) {
         updateUnionCandidateLists(unionList, wordNodePairs.get(i));
         int index = -1;
         for (int j = 0; j < unionList.size(); j++) {
@@ -204,12 +205,12 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
             }
         }
         ProjectionOracle oracle;
-        if (type.equals(ParserConverterType.BASIC_ORACLE) || unionList.size() > 8) {
+        if (models == null || unionList.size() > 8) {
             oracle = new BasicOracle();
         } else {
             oracle = new ClassifierOracle();
         }
-        ArrayList<SimpleEntry<Command, String>> list = oracle.makeCommands(specialsMap, unionList, index);
+        ArrayList<SimpleEntry<Command, String>> list = oracle.makeCommands(specialsMap, unionList, index, models);
         ArrayList<WordNodePair> currentUnionList = new ArrayList<>();
         currentUnionList.add(unionList.get(index));
         int leftIndex = 0, rightIndex = 0, iterate = 0;
@@ -309,7 +310,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
      * @return a {@link ParseTree}.
      */
 
-    private ParseTree constructTreeFromWords(ArrayList<WordNodePair> wordNodePairs, HashMap<Integer, ArrayList<Integer>> dependencyMap, ParserConverterType type) throws FileNotFoundException {
+    private ParseTree constructTreeFromWords(ArrayList<WordNodePair> wordNodePairs, HashMap<Integer, ArrayList<Integer>> dependencyMap, ArrayList<TreeEnsembleModel> models) throws FileNotFoundException {
         HashMap<String, Integer> specialsMap = setSpecialMap();
         int total;
         while (true) {
@@ -334,7 +335,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
             } while (true);
             wordNodePairs.get(j - 1).doneForHead();
             if (unionList.size() > 0) {
-                merge(wordNodePairs, specialsMap, unionList, j - 1, type);
+                merge(wordNodePairs, specialsMap, unionList, j - 1, models);
             } else {
                 break;
             }
@@ -388,12 +389,12 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
      * @return a {@link ParseTree}.
      */
 
-    public ParseTree convert(AnnotatedSentence annotatedSentence, ParserConverterType type) {
+    public ParseTree convert(AnnotatedSentence annotatedSentence, ArrayList<TreeEnsembleModel> models) {
         try {
             ArrayList<WordNodePair> wordNodePairs = constructWordPairList(annotatedSentence, annotatedSentence.getFileName());
             HashMap<Integer, ArrayList<Integer>> dependencyMap = setDependencyMap(wordNodePairs);
             if (wordNodePairs.size() > 1) {
-                return constructTreeFromWords(wordNodePairs, dependencyMap, type);
+                return constructTreeFromWords(wordNodePairs, dependencyMap, models);
             } else {
                 ParseNodeDrawable parent = new ParseNodeDrawable(new Symbol("S"));
                 parent.addChild(wordNodePairs.get(0).getNode());

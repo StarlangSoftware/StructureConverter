@@ -1,16 +1,15 @@
 package StructureConverter.DependencyToConstituency;/* Created by oguzkeremyildiz on 4.02.2021 */
 
-import DataStructure.CounterHashMap;
+import Classification.Attribute.Attribute;
+import Classification.Attribute.ContinuousAttribute;
+import Classification.Attribute.DiscreteAttribute;
+import Classification.Instance.Instance;
+import Classification.Model.TreeEnsembleModel;
 import StructureConverter.WordNodePair;
 import Util.FileUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.Scanner;
 
 public class ClassifierOracle extends ProjectionOracle {
 
@@ -24,52 +23,43 @@ public class ClassifierOracle extends ProjectionOracle {
                 String line = source.nextLine();
                 dataList.add(line.split(" "));
             }
+            source.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private String testKnn(String[] testData, int pathName, int length1, int length2) {
-        CounterHashMap<String> counts = new CounterHashMap<>();
-        String[][] trainData = new String[length1][length2];
-        Scanner input = new Scanner(FileUtils.getInputStream("DepToCons/" + pathName + ".txt"));
-        for (int i = 0; i < length1; i++){
-            String[] items = input.nextLine().split(" ");
-            for (int j = 0; j < length2; j++){
-                trainData[i][j] = items[j];
+    private ArrayList<Attribute> setTestData(ArrayList<WordNodePair> unionList, int currentIndex) {
+        Attribute[] array = new Attribute[unionList.size() + ((unionList.size() - 1) * 3)];
+        int iterate = 0;
+        for (int i = 0; i < unionList.size(); i++) {
+            array[i] = new DiscreteAttribute(unionList.get(i).getWord().getParse().getPos());
+            if (i != currentIndex) {
+                array[unionList.size() + (3 * iterate)] = new ContinuousAttribute(i);
+                array[unionList.size() + (3 * iterate) + 1] = new ContinuousAttribute(currentIndex);
+                array[unionList.size() + (3 * iterate) + 2] = new DiscreteAttribute(unionList.get(i).getUniversalDependency());
+                iterate++;
             }
         }
-        input.close();
-        int minDistance = length2 - 1;
-        for (int i = 0; i < length1; i++){
-            int count = 0;
-            for (int j = 0; j < length2 - 1; j++){
-                if (!testData[j].equals(trainData[i][j])){
-                    count++;
-                }
-            }
-            if (count < minDistance){
-                minDistance = count;
-            }
-        }
-        for (int i = 0; i < length1; i++){
-            int count = 0;
-            for (int j = 0; j < length2 - 1; j++){
-                if (!testData[j].equals(trainData[i][j])){
-                    count++;
-                }
-            }
-            if (count == minDistance){
-                counts.put(trainData[i][length2 - 1]);
-            }
-        }
-        return counts.max();
+        return new ArrayList<>(Arrays.asList(array));
     }
 
-    private ArrayList<SimpleEntry<Command, String>> findList(int unionListSize, int classInfo, int headIndex, ArrayList<WordNodePair> unionList, String currentPos) {
-        for (int i = 0; i < dataList.size(); i++) {
-            String[] array = dataList.get(i);
-            if (Integer.parseInt(array[0]) == unionListSize && Integer.parseInt(array[1]) == classInfo && Integer.parseInt(array[2]) == headIndex) {
+    private boolean containsAllCommands(ArrayList<SimpleEntry<Command, String>> list, int headIndex) {
+        int left = 0;
+        for (SimpleEntry<Command, String> entry : list) {
+            if (entry.getKey().equals(Command.LEFT)) {
+                left++;
+            }
+        }
+        return left == headIndex;
+    }
+
+    private ArrayList<SimpleEntry<Command, String>> findList(HashMap<String, Double> classInfo, int headIndex, ArrayList<WordNodePair> unionList, String currentPos) {
+        ArrayList<SimpleEntry<Command, String>> best = new ArrayList<>();
+        double bestValue = Integer.MIN_VALUE;
+        HashMap<ArrayList<SimpleEntry<Command, String>>, Double> listMap = new HashMap<>();
+        for (String[] array : dataList) {
+            if (Integer.parseInt(array[0]) == unionList.size() && classInfo.containsKey(array[1]) && Integer.parseInt(array[2]) == headIndex) {
                 ArrayList<SimpleEntry<Command, String>> list = new ArrayList<>();
                 for (int j = 3; j < array.length; j++) {
                     if (array[j].equals("MERGE")) {
@@ -80,25 +70,24 @@ public class ClassifierOracle extends ProjectionOracle {
                         list.add(new SimpleEntry<>(Command.LEFT, null));
                     }
                 }
-                return list;
+                listMap.put(list, classInfo.get(array[1]));
             }
         }
-        return null;
+        for (ArrayList<SimpleEntry<Command, String>> key : listMap.keySet()) {
+            if (containsAllCommands(key, headIndex)) {
+                if (listMap.get(key) > bestValue) {
+                    best = key;
+                    bestValue = listMap.get(key);
+                }
+            }
+        }
+        return best;
     }
 
     @Override
-    public ArrayList<SimpleEntry<Command, String>> makeCommands(HashMap<String, Integer> specialsMap, ArrayList<WordNodePair> unionList, int currentIndex) throws FileNotFoundException {
-        String[] testData = new String[unionList.size() + ((unionList.size() - 1) * 3)];
-        int iterate = 0, classInfo;
-        for (int i = 0; i < unionList.size(); i++) {
-            testData[i] = unionList.get(i).getWord().getParse().getPos();
-            if (i != currentIndex) {
-                testData[unionList.size() + (3 * iterate)] = Integer.toString(i);
-                testData[unionList.size() + (3 * iterate) + 1] = Integer.toString(currentIndex);
-                testData[unionList.size() + (3 * iterate) + 2] = unionList.get(i).getUniversalDependency();
-                iterate++;
-            }
-        }
+    public ArrayList<SimpleEntry<Command, String>> makeCommands(HashMap<String, Integer> specialsMap, ArrayList<WordNodePair> unionList, int currentIndex, ArrayList<TreeEnsembleModel> models) {
+        ArrayList<Attribute> testData = setTestData(unionList, currentIndex);
+        HashMap<String, Double> classInfo;
         switch (unionList.size()) {
             case 2:
                 ArrayList<SimpleEntry<Command, String>> list = new ArrayList<>();
@@ -110,23 +99,23 @@ public class ClassifierOracle extends ProjectionOracle {
                 list.add(new SimpleEntry<>(Command.MERGE, setTreePos(unionList, unionList.get(currentIndex).getTreePos())));
                 return list;
             case 3:
-                classInfo = Integer.parseInt(testKnn(testData, unionList.size(), 11239, 10));
-                return findList(3, classInfo, currentIndex, unionList, unionList.get(currentIndex).getTreePos());
+                classInfo = models.get(0).predictProbability(new Instance("", testData));
+                return findList(classInfo, currentIndex, unionList, unionList.get(currentIndex).getTreePos());
             case 4:
-                classInfo = Integer.parseInt(testKnn(testData, unionList.size(), 6360, 14));
-                return findList(4, classInfo, currentIndex, unionList, unionList.get(currentIndex).getTreePos());
+                classInfo = models.get(1).predictProbability(new Instance("", testData));
+                return findList( classInfo, currentIndex, unionList, unionList.get(currentIndex).getTreePos());
             case 5:
-                classInfo = Integer.parseInt(testKnn(testData, unionList.size(), 4265, 18));
-                return findList(5, classInfo, currentIndex, unionList, unionList.get(currentIndex).getTreePos());
+                classInfo = models.get(2).predictProbability(new Instance("", testData));
+                return findList(classInfo, currentIndex, unionList, unionList.get(currentIndex).getTreePos());
             case 6:
-                classInfo = Integer.parseInt(testKnn(testData, unionList.size(), 2115, 22));
-                return findList(6, classInfo, currentIndex, unionList, unionList.get(currentIndex).getTreePos());
+                classInfo = models.get(3).predictProbability(new Instance("", testData));
+                return findList(classInfo, currentIndex, unionList, unionList.get(currentIndex).getTreePos());
             case 7:
-                classInfo = Integer.parseInt(testKnn(testData, unionList.size(), 814, 26));
-                return findList(7, classInfo, currentIndex, unionList, unionList.get(currentIndex).getTreePos());
+                classInfo = models.get(4).predictProbability(new Instance("", testData));
+                return findList(classInfo, currentIndex, unionList, unionList.get(currentIndex).getTreePos());
             case 8:
-                classInfo = Integer.parseInt(testKnn(testData, unionList.size(), 221, 30));
-                return findList(8, classInfo, currentIndex, unionList, unionList.get(currentIndex).getTreePos());
+                classInfo = models.get(5).predictProbability(new Instance("", testData));
+                return findList(classInfo, currentIndex, unionList, unionList.get(currentIndex).getTreePos());
             default:
                 break;
         }

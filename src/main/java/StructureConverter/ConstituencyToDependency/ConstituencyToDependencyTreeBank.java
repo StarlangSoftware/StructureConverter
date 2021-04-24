@@ -3,7 +3,6 @@ package StructureConverter.ConstituencyToDependency;
 import AnnotatedSentence.*;
 import AnnotatedTree.TreeBankDrawable;
 import StructureConverter.MorphologicalAnalysisNotExistsException;
-import StructureConverter.ParserConverterType;
 
 public class ConstituencyToDependencyTreeBank {
     private TreeBankDrawable treeBank;

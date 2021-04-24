@@ -23,4 +23,9 @@ public class Decision {
     public String getData() {
         return data;
     }
+
+    @Override
+    public String toString() {
+        return this.no + " " + this.to + " " + this.data;
+    }
 }
