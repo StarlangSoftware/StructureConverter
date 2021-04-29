@@ -35,8 +35,8 @@ public class ClassifierOracle extends ProjectionOracle {
         for (int i = 0; i < unionList.size(); i++) {
             array[i] = new DiscreteAttribute(unionList.get(i).getWord().getParse().getPos());
             if (i != currentIndex) {
-                array[unionList.size() + (3 * iterate)] = new ContinuousAttribute(i);
-                array[unionList.size() + (3 * iterate) + 1] = new ContinuousAttribute(currentIndex);
+                array[unionList.size() + (3 * iterate)] = new DiscreteAttribute(Integer.toString(i));
+                array[unionList.size() + (3 * iterate) + 1] = new DiscreteAttribute(Integer.toString(currentIndex));
                 array[unionList.size() + (3 * iterate) + 2] = new DiscreteAttribute(unionList.get(i).getUniversalDependency());
                 iterate++;
             }
