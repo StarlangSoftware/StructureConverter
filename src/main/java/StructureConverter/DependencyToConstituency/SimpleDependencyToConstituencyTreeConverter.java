@@ -99,29 +99,35 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
      * Adds a new element to the {@link ArrayList} of elements to be connected sequentially.
      * @param list the {@link ArrayList} of elements to be connected sequentially.
      * @param wordNodePair element to add to the {@link ArrayList}.
+     * @return the index of the inserted <code>wordNodePair</code>.
      */
 
-    private void updateUnionCandidateLists(ArrayList<WordNodePair> list, WordNodePair wordNodePair) {
+    private int updateUnionCandidateLists(ArrayList<WordNodePair> list, WordNodePair wordNodePair) {
         if (list.size() < 2) {
             if (list.size() == 1 && list.get(0).getNo() > wordNodePair.getNo()) {
                 list.add(0, wordNodePair);
+                return 0;
             } else {
                 list.add(wordNodePair);
+                return list.size() - 1;
             }
         } else {
             if (list.get(0).getNo() > wordNodePair.getNo()) {
                 list.add(0, wordNodePair);
+                return 0;
             } else if (list.get(list.size() - 1).getNo() < wordNodePair.getNo()) {
                 list.add(wordNodePair);
+                return list.size() - 1;
             } else {
                 for (int i = 0; i < list.size() - 1; i++) {
                     if (wordNodePair.getNo() > list.get(i).getNo() && wordNodePair.getNo() < list.get(i + 1).getNo()) {
                         list.add(i + 1, wordNodePair);
-                        break;
+                        return i + 1;
                     }
                 }
             }
         }
+        return -1;
     }
 
     /**
@@ -196,14 +202,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
      */
 
     private void merge(ArrayList<WordNodePair> wordNodePairs, HashMap<String, Integer> specialsMap, ArrayList<WordNodePair> unionList, int i, ArrayList<TreeEnsembleModel> models) {
-        updateUnionCandidateLists(unionList, wordNodePairs.get(i));
-        int index = -1;
-        for (int j = 0; j < unionList.size(); j++) {
-            if (unionList.get(j).equals(wordNodePairs.get(i))) {
-                index = j;
-                break;
-            }
-        }
+        int index = updateUnionCandidateLists(unionList, wordNodePairs.get(i));
         ProjectionOracle oracle;
         if (models == null || unionList.size() > 8) {
             oracle = new BasicOracle();
