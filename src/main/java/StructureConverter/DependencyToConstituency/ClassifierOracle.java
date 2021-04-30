@@ -4,6 +4,7 @@ import Classification.Attribute.Attribute;
 import Classification.Attribute.DiscreteAttribute;
 import Classification.Instance.Instance;
 import Classification.Model.TreeEnsembleModel;
+import MorphologicalAnalysis.MorphologicalTag;
 import StructureConverter.WordNodePair;
 import Util.FileUtils;
 
@@ -29,15 +30,21 @@ public class ClassifierOracle extends ProjectionOracle {
     }
 
     private ArrayList<Attribute> setTestData(ArrayList<WordNodePair> unionList, int currentIndex) {
-        Attribute[] array = new Attribute[(unionList.size() * 2) + ((unionList.size() - 1) * 3)];
+        Attribute[] array = new Attribute[(unionList.size() * 8) + ((unionList.size() - 1) * 3)];
         int iterate = 0;
         for (int i = 0; i < unionList.size(); i++) {
-            array[i * 2] = new DiscreteAttribute(unionList.get(i).getWord().getParse().getPos());
-            array[(i * 2) + 1] = new DiscreteAttribute(unionList.get(i).getWord().getParse().getRootPos());
+            array[i * 8] = new DiscreteAttribute(unionList.get(i).getWord().getParse().getPos());
+            array[(i * 8) + 1] = new DiscreteAttribute(unionList.get(i).getWord().getParse().getRootPos());
+            array[(i * 8) + 2] = new DiscreteAttribute(Boolean.toString(unionList.get(i).getWord().getParse().containsTag(MorphologicalTag.ABLATIVE)));
+            array[(i * 8) + 3] = new DiscreteAttribute(Boolean.toString(unionList.get(i).getWord().getParse().containsTag(MorphologicalTag.DATIVE)));
+            array[(i * 8) + 4] = new DiscreteAttribute(Boolean.toString(unionList.get(i).getWord().getParse().containsTag(MorphologicalTag.GENITIVE)));
+            array[(i * 8) + 5] = new DiscreteAttribute(Boolean.toString(unionList.get(i).getWord().getParse().containsTag(MorphologicalTag.NOMINATIVE)));
+            array[(i * 8) + 6] = new DiscreteAttribute(Boolean.toString(unionList.get(i).getWord().getParse().containsTag(MorphologicalTag.ACCUSATIVE)));
+            array[(i * 8) + 7] = new DiscreteAttribute(Boolean.toString(unionList.get(i).getWord().getParse().containsTag(MorphologicalTag.PROPERNOUN)));
             if (i != currentIndex) {
-                array[(unionList.size() * 2) + (3 * iterate)] = new DiscreteAttribute(Integer.toString(i));
-                array[(unionList.size() * 2) + (3 * iterate) + 1] = new DiscreteAttribute(Integer.toString(currentIndex));
-                array[(unionList.size() * 2) + (3 * iterate) + 2] = new DiscreteAttribute(unionList.get(i).getUniversalDependency());
+                array[(unionList.size() * 8) + (3 * iterate)] = new DiscreteAttribute(Integer.toString(i));
+                array[(unionList.size() * 8) + (3 * iterate) + 1] = new DiscreteAttribute(Integer.toString(currentIndex));
+                array[(unionList.size() * 8) + (3 * iterate) + 2] = new DiscreteAttribute(unionList.get(i).getUniversalDependency());
                 iterate++;
             }
         }
