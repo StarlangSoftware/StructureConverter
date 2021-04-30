@@ -1,7 +1,6 @@
 package StructureConverter.DependencyToConstituency;/* Created by oguzkeremyildiz on 4.02.2021 */
 
 import Classification.Attribute.Attribute;
-import Classification.Attribute.ContinuousAttribute;
 import Classification.Attribute.DiscreteAttribute;
 import Classification.Instance.Instance;
 import Classification.Model.TreeEnsembleModel;
@@ -30,14 +29,15 @@ public class ClassifierOracle extends ProjectionOracle {
     }
 
     private ArrayList<Attribute> setTestData(ArrayList<WordNodePair> unionList, int currentIndex) {
-        Attribute[] array = new Attribute[unionList.size() + ((unionList.size() - 1) * 3)];
+        Attribute[] array = new Attribute[(unionList.size() * 2) + ((unionList.size() - 1) * 3)];
         int iterate = 0;
         for (int i = 0; i < unionList.size(); i++) {
-            array[i] = new DiscreteAttribute(unionList.get(i).getWord().getParse().getPos());
+            array[i * 2] = new DiscreteAttribute(unionList.get(i).getWord().getParse().getPos());
+            array[(i * 2) + 1] = new DiscreteAttribute(unionList.get(i).getWord().getParse().getRootPos());
             if (i != currentIndex) {
-                array[unionList.size() + (3 * iterate)] = new DiscreteAttribute(Integer.toString(i));
-                array[unionList.size() + (3 * iterate) + 1] = new DiscreteAttribute(Integer.toString(currentIndex));
-                array[unionList.size() + (3 * iterate) + 2] = new DiscreteAttribute(unionList.get(i).getUniversalDependency());
+                array[(unionList.size() * 2) + (3 * iterate)] = new DiscreteAttribute(Integer.toString(i));
+                array[(unionList.size() * 2) + (3 * iterate) + 1] = new DiscreteAttribute(Integer.toString(currentIndex));
+                array[(unionList.size() * 2) + (3 * iterate) + 2] = new DiscreteAttribute(unionList.get(i).getUniversalDependency());
                 iterate++;
             }
         }
