@@ -99,6 +99,13 @@ public class ClassifierDependencyOracle implements DependencyOracle {
         ArrayList<Decision> decisions = new ArrayList<>();
         for (int i = 0; i < lastIndex + 1 - firstIndex; i++) {
             testData.add(new DiscreteAttribute(wordNodePairList.get(firstIndex + i).getWord().getParse().getPos()));
+            testData.add(new DiscreteAttribute(wordNodePairList.get(firstIndex + i).getWord().getParse().getRootPos()));
+            testData.add(new DiscreteAttribute(Boolean.toString(wordNodePairList.get(firstIndex + i).getWord().getParse().containsTag(MorphologicalTag.ABLATIVE))));
+            testData.add(new DiscreteAttribute(Boolean.toString(wordNodePairList.get(firstIndex + i).getWord().getParse().containsTag(MorphologicalTag.DATIVE))));
+            testData.add(new DiscreteAttribute(Boolean.toString(wordNodePairList.get(firstIndex + i).getWord().getParse().containsTag(MorphologicalTag.GENITIVE))));
+            testData.add(new DiscreteAttribute(Boolean.toString(wordNodePairList.get(firstIndex + i).getWord().getParse().containsTag(MorphologicalTag.NOMINATIVE))));
+            testData.add(new DiscreteAttribute(Boolean.toString(wordNodePairList.get(firstIndex + i).getWord().getParse().containsTag(MorphologicalTag.ACCUSATIVE))));
+            testData.add(new DiscreteAttribute(Boolean.toString(wordNodePairList.get(firstIndex + i).getWord().getParse().containsTag(MorphologicalTag.PROPERNOUN))));
         }
         switch (lastIndex + 1 - firstIndex) {
             case 2:
