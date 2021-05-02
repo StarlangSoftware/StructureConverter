@@ -51,16 +51,6 @@ public class ClassifierOracle extends ProjectionOracle {
         return new ArrayList<>(Arrays.asList(array));
     }
 
-    private boolean containsAllCommands(ArrayList<SimpleEntry<Command, String>> list, int headIndex) {
-        int left = 0;
-        for (SimpleEntry<Command, String> entry : list) {
-            if (entry.getKey().equals(Command.LEFT)) {
-                left++;
-            }
-        }
-        return left == headIndex;
-    }
-
     private ArrayList<SimpleEntry<Command, String>> findList(HashMap<String, Double> classInfo, int headIndex, ArrayList<WordNodePair> unionList, String currentPos) {
         ArrayList<SimpleEntry<Command, String>> best = new ArrayList<>();
         double bestValue = Integer.MIN_VALUE;
@@ -81,11 +71,9 @@ public class ClassifierOracle extends ProjectionOracle {
             }
         }
         for (ArrayList<SimpleEntry<Command, String>> key : listMap.keySet()) {
-            if (containsAllCommands(key, headIndex)) {
-                if (listMap.get(key) > bestValue) {
-                    best = key;
-                    bestValue = listMap.get(key);
-                }
+            if (listMap.get(key) > bestValue) {
+                best = key;
+                bestValue = listMap.get(key);
             }
         }
         return best;
