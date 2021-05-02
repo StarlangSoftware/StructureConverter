@@ -1,60 +1,60 @@
-PUNC NOUN PUNC VERB PUNC VERB PUNC 1
-ADV PUNC ADV PUNC PRON VERB PUNC 1
-CONJ PUNC NOUN PUNC NOUN VERB PUNC 1
-PUNC VERB PUNC PUNC VERB NOUN PUNC 2
-ADV PUNC NOUN PUNC NOUN VERB PUNC 1
-ADV NOUN PUNC ADV ADV NOUN PUNC 3
-CONJ PUNC ADV PUNC NOUN VERB PUNC 1
-NOUN PUNC ADV PUNC NOUN VERB PUNC 1
-CONJ PUNC NOUN PUNC NOUN VERB PUNC 1
-PUNC VERB PUNC PUNC VERB PRON PUNC 2
-PUNC VERB PUNC PUNC VERB NOUN PUNC 2
-NOUN ADJ NOUN NOUN NOUN NOUN NOUN 4
-PUNC VERB PUNC PUNC VERB PRON PUNC 2
-NOUN PUNC VERB PUNC PUNC VERB PUNC 1
-NOUN PUNC ADJ PUNC PUNC VERB PUNC 1
-NOUN PUNC VERB PUNC PUNC VERB PUNC 1
-PRON VERB PUNC PUNC NOUN PUNC PUNC 5
-ADV PUNC ADJ PUNC PRON VERB PUNC 1
-NOUN PUNC NOUN PUNC NOUN VERB PUNC 6
-CONJ PUNC NOUN PUNC ADV VERB PUNC 1
-PUNC ADJ PUNC PUNC VERB NOUN PUNC 7
-DET NOUN PUNC NOUN CONJ NOUN VERB 8
-ADV PUNC ADJ PUNC CONJ VERB PUNC 9
-NOUN PUNC ADV PUNC NOUN VERB PUNC 1
-NOUN PUNC NOUN PUNC ADV VERB PUNC 1
-DET PUNC ADJ ADJ NOUN PUNC NOUN 10
-NOUN VERB PUNC PUNC NOUN PUNC PUNC 5
-ADV NOUN PUNC NOUN PUNC VERB PUNC 1
-PUNC VERB PUNC PUNC VERB NOUN PUNC 7
-PUNC NOUN PUNC PUNC NOUN VERB PUNC 1
-NOUN NOUN CONJ NOUN CONJ NOUN NOUN 11
-NOUN PUNC VERB PUNC PUNC VERB PUNC 12
-NOUN PUNC ADJ PUNC NOUN VERB PUNC 1
-PUNC VERB PUNC PUNC NOUN VERB PUNC 13
-PUNC VERB PUNC PUNC VERB NOUN PUNC 7
-NOUN PUNC VERB PUNC PUNC VERB PUNC 12
-PUNC VERB PUNC PUNC NOUN VERB PUNC 13
-NOUN PUNC VERB PUNC PUNC VERB PUNC 12
-NOUN PUNC VERB PUNC PUNC VERB PUNC 12
-NOUN PUNC NOUN PUNC NOUN VERB PUNC 1
-NOUN PUNC ADJ PUNC PUNC VERB PUNC 12
-NOUN PUNC VERB PUNC PUNC VERB PUNC 12
-NOUN PUNC NOUN PUNC PUNC VERB PUNC 14
-CONJ ADV PUNC NOUN PUNC VERB PUNC 1
-NOUN PUNC VERB PUNC PUNC VERB PUNC 12
-NOUN PUNC VERB PUNC PUNC VERB PUNC 12
-CONJ PUNC NOUN PUNC NOUN VERB PUNC 1
-PUNC VERB PUNC PUNC NOUN VERB PUNC 1
-CONJ ADV NOUN PUNC NOUN VERB PUNC 1
-VERB PUNC NOUN ADV ADV NOUN PUNC 1
-NOUN PUNC NOUN PUNC ADV VERB PUNC 1
-NOUN NOUN NOUN PUNC NOUN NOUN NOUN 4
-PUNC VERB PUNC PUNC VERB NOUN PUNC 2
-ADV PUNC ADV PUNC NOUN VERB PUNC 1
-NOUN PUNC ADV PUNC NOUN VERB PUNC 1
-PUNC VERB PUNC PUNC VERB NOUN PUNC 2
-CONJ NOUN PUNC NOUN ADV VERB PUNC 1
-DET NOUN NOUN CONJ NOUN NOUN VERB 15
-NOUN PUNC NOUN PUNC NOUN PUNC NOUN 4
-NOUN NOUN PUNC NOUN PUNC NOUN NOUN 16
+PUNC PUNC false false false false false false NOUN NOUN false false false true false false PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false 1
+ADV ADV false false false false false false PUNC PUNC false false false false false false ADV VERB false false false false false false PUNC PUNC false false false false false false PRON PRON false false false true false false VERB VERB false false false false false false PUNC PUNC false false false false false false 1
+CONJ CONJ false false false false false false PUNC PUNC false false false false false false NOUN NOUN false false false false false false PUNC PUNC false false false false false false NOUN NOUN false false false true false false VERB VERB false false false false false false PUNC PUNC false false false false false false 1
+PUNC PUNC false false false false false false VERB ADJ false false false false false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false NOUN VERB false false false true false false PUNC PUNC false false false false false false 2
+ADV ADV false false false false false false PUNC PUNC false false false false false false NOUN VERB true false false false false false PUNC PUNC false false false false false false NOUN NOUN false false false true false true VERB VERB false false false false false false PUNC PUNC false false false false false false 1
+ADV ADV false false false false false false NOUN NOUN false false false true false true PUNC PUNC false false false false false false ADV ADV false false false false false false ADV ADV false false false false false false NOUN NOUN false false false true false false PUNC PUNC false false false false false false 3
+CONJ CONJ false false false false false false PUNC PUNC false false false false false false ADV VERB false false false false false false PUNC PUNC false false false false false false NOUN NOUN false false false true false false VERB ADJ false false false false false false PUNC PUNC false false false false false false 1
+NOUN NOUN false false false true false false PUNC PUNC false false false false false false ADV ADV false false false false false false PUNC PUNC false false false false false false NOUN NOUN false false false true false false VERB VERB false false false false false false PUNC PUNC false false false false false false 1
+CONJ CONJ false false false false false false PUNC PUNC false false false false false false NOUN NOUN false false false false false false PUNC PUNC false false false false false false NOUN NOUN false false false true false true VERB VERB false false false false false false PUNC PUNC false false false false false false 1
+PUNC PUNC false false false false false false VERB NOUN false false false true false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false PRON PRON false false false true false false PUNC PUNC false false false false false false 2
+PUNC PUNC false false false false false false VERB ADJ false false false false false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false NOUN NOUN false false false true false true PUNC PUNC false false false false false false 2
+NOUN NOUN false false true false false false ADJ NOUN false false false true false false NOUN NOUN false false false true false false NOUN NOUN false false false true false false NOUN NOUN false false false true false false NOUN NOUN false false true false false false NOUN NOUN false false false true false false 4
+PUNC PUNC false false false false false false VERB NOUN false false false true false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false PRON PRON false false false true false false PUNC PUNC false false false false false false 2
+NOUN NOUN false false false true false true PUNC PUNC false false false false false false VERB NOUN false false false true false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false 1
+NOUN NOUN false false false true false true PUNC PUNC false false false false false false ADJ NOUN false false false true false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false 1
+NOUN NOUN false false false true false false PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false 1
+PRON PRON false false false true false false VERB VERB false false false false false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false NOUN VERB false false false true false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false 5
+ADV ADV false false false false false false PUNC PUNC false false false false false false ADJ ADJ false false false false false false PUNC PUNC false false false false false false PRON PRON false false false true false false VERB ADJ false false false false false false PUNC PUNC false false false false false false 1
+NOUN NOUN false false false true false false PUNC PUNC false false false false false false NOUN NOUN false false false false false false PUNC PUNC false false false false false false NOUN NOUN false false false true false false VERB NOUN false false false true false false PUNC PUNC false false false false false false 6
+CONJ CONJ false false false false false false PUNC PUNC false false false false false false NOUN NOUN false false false true false false PUNC PUNC false false false false false false ADV ADV false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false 1
+PUNC PUNC false false false false false false ADJ ADJ false false false false false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false NOUN NOUN false false false true false true PUNC PUNC false false false false false false 7
+DET DET false false false false false false NOUN NOUN false false false true false false PUNC PUNC false false false false false false NOUN NOUN false false false true false false CONJ CONJ false false false false false false NOUN NOUN false false false true false false VERB NOUN false false false true false false 8
+ADV ADV false false false false false false PUNC PUNC false false false false false false ADJ ADJ false false false false false false PUNC PUNC false false false false false false CONJ CONJ false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false 9
+NOUN VERB false false false false false false PUNC PUNC false false false false false false ADV ADV false false false false false false PUNC PUNC false false false false false false NOUN NOUN false false false true false false VERB VERB false false false false false false PUNC PUNC false false false false false false 1
+NOUN NOUN false false false true false true PUNC PUNC false false false false false false NOUN NOUN false false false false false false PUNC PUNC false false false false false false ADV ADV false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false 1
+DET DET false false false false false false PUNC PUNC false false false false false false ADJ ADJ false false false false false false ADJ NOUN false false false true false false NOUN NOUN false false false true false false PUNC PUNC false false false false false false NOUN NOUN false false false false true false 10
+NOUN NOUN false false false true false true VERB VERB false false false false false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false NOUN NOUN false false false true false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false 5
+ADV ADV false false false false false false NOUN NOUN false false false true false false PUNC PUNC false false false false false false NOUN NOUN false false false true false false PUNC PUNC false false false false false false VERB NOUN false false false true false false PUNC PUNC false false false false false false 1
+PUNC PUNC false false false false false false VERB NOUN false false false false false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false NOUN NOUN false false false true false true PUNC PUNC false false false false false false 7
+PUNC PUNC false false false false false false NOUN NOUN false false false true false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false NOUN NOUN false false false true false true VERB VERB false false false false false false PUNC PUNC false false false false false false 1
+NOUN NOUN false false true false false true NOUN NOUN false false false true false false CONJ CONJ false false false false false false NOUN VERB false false false true false false CONJ CONJ false false false false false false NOUN NOUN false false false true false false NOUN VERB false false false false false false 11
+NOUN NOUN false false false true false true PUNC PUNC false false false false false false VERB VERB false false false true false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false 12
+NOUN NOUN false false false false false false PUNC PUNC false false false false false false ADJ ADJ false false false false false false PUNC PUNC false false false false false false NOUN NOUN false false false true false false VERB VERB false false false false false false PUNC PUNC false false false false false false 1
+PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false NOUN NOUN false false false true false true VERB VERB false false false false false false PUNC PUNC false false false false false false 13
+PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false NOUN NOUN false false false true false true PUNC PUNC false false false false false false 7
+NOUN NOUN false false false true false true PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false 12
+PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false NOUN NOUN false false false true false true VERB VERB false false false false false false PUNC PUNC false false false false false false 13
+NOUN NOUN false false false true false true PUNC PUNC false false false false false false VERB ADJ false false false false false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false 12
+NOUN NOUN false false false true false true PUNC PUNC false false false false false false VERB ADJ false false false false false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false 12
+NOUN NOUN false false false false false true PUNC PUNC false false false false false false NOUN NOUN false false true false false false PUNC PUNC false false false false false false NOUN NOUN false false false true false false VERB NOUN false false false true false false PUNC PUNC false false false false false false 1
+NOUN NOUN false false false true false true PUNC PUNC false false false false false false ADJ ADJ false false false false false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false 12
+NOUN NOUN false false false true false false PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false 12
+NOUN NOUN false false false true false true PUNC PUNC false false false false false false NOUN VERB false false false true false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false 14
+CONJ CONJ false false false false false false ADV ADV false false false false false false PUNC PUNC false false false false false false NOUN NOUN false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false 1
+NOUN NOUN false false false true false true PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false 12
+NOUN NOUN false false false true false true PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false 12
+CONJ CONJ false false false false false false PUNC PUNC false false false false false false NOUN NOUN false false false true false false PUNC PUNC false false false false false false NOUN NOUN false false false false true false VERB VERB false false false false false false PUNC PUNC false false false false false false 1
+PUNC PUNC false false false false false false VERB ADJ false false false false false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false NOUN NOUN false false false true false true VERB VERB false false false false false false PUNC PUNC false false false false false false 1
+CONJ CONJ false false false false false false ADV ADV false false false false false false NOUN NOUN false false false true false false PUNC PUNC false false false false false false NOUN NOUN false false false true false false VERB VERB false false false false false false PUNC PUNC false false false false false false 1
+VERB ADJ false false false false false false PUNC PUNC false false false false false false NOUN NOUN false false false false true false ADV ADV false false false false false false ADV ADV false false false false false false NOUN NOUN false false false true false false PUNC PUNC false false false false false false 1
+NOUN NOUN false false false true false false PUNC PUNC false false false false false false NOUN NOUN false false false true false true PUNC PUNC false false false false false false ADV ADV false false false false false false VERB NOUN false false false true false false PUNC PUNC false false false false false false 1
+NOUN NOUN false false false true false true NOUN NOUN false false false true false true NOUN NOUN false false false true false true PUNC PUNC false false false false false false NOUN NOUN false false false true false false NOUN NOUN false false false true false false NOUN NOUN false false false false true false 4
+PUNC PUNC false false false false false false VERB NOUN false false false true false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false NOUN NOUN false false false true false false PUNC PUNC false false false false false false 2
+ADV ADV false false false false false false PUNC PUNC false false false false false false ADV ADV false false false false false false PUNC PUNC false false false false false false NOUN NOUN false false false true false false VERB VERB false false false false false false PUNC PUNC false false false false false false 1
+NOUN NOUN false true false false false false PUNC PUNC false false false false false false ADV ADV false false false false false false PUNC PUNC false false false false false false NOUN VERB false false false true false false VERB VERB false false false false false false PUNC PUNC false false false false false false 1
+PUNC PUNC false false false false false false VERB POSTP false false false false false false PUNC PUNC false false false false false false PUNC PUNC false false false false false false VERB VERB false false false false false false NOUN NOUN false false false true false true PUNC PUNC false false false false false false 2
+CONJ CONJ false false false false false false NOUN VERB false false false false false false PUNC PUNC false false false false false false NOUN NOUN false false false true false false ADV ADV false false false false false false VERB VERB false false false false false false PUNC PUNC false false false false false false 1
+DET DET false false false false false false NOUN NOUN false false false true false false NOUN VERB false false false true false false CONJ CONJ false false false false false false NOUN NOUN false false false true false false NOUN NOUN false false false true false false VERB VERB false false false true false false 15
+NOUN NOUN false false false true false true PUNC PUNC false false false false false false NOUN NOUN false false false true false true PUNC PUNC false false false false false false NOUN NOUN false false false true false true PUNC PUNC false false false false false false NOUN NOUN false false false true false true 4
+NOUN NOUN false false false true false true NOUN NOUN false false false true false true PUNC PUNC false false false false false false NOUN NOUN false false false true false true PUNC PUNC false false false false false false NOUN NOUN false false false true false false NOUN NOUN false false false true false false 16
