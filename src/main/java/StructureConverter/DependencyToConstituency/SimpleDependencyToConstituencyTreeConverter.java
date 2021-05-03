@@ -126,11 +126,6 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
             int toWordIndex = wordNodePair.getTo() - 1;
             if (!wordNodePair.isDoneForConnect()) {
                 if (noIncomingNodes(wordNodePairs, i) && toWordIndex == headWord.getNo()) {
-                    wordNodePair.doneForConnect();
-                    updateUnionCandidateLists(list, wordNodePair);
-                }
-            } else {
-                if (toWordIndex > -1 && toWordIndex == headWord.getNo()) {
                     updateUnionCandidateLists(list, wordNodePair);
                 }
             }
@@ -275,20 +270,27 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         return map;
     }
 
-    private boolean isSpecialState(ArrayList<WordNodePair> unionList, ArrayList<WordNodePair> wordNodePairs, int headIndex) {
+    /**
+     * @param unionList {@link ArrayList} of {@link WordNodePair}s to merge.
+     * @param wordNodePairs {@link WordNodePair} {@link ArrayList}.
+     * @param headIndex index of headWord.
+     * @return an {@link Integer}.
+     */
+
+    private int isSpecialState(ArrayList<WordNodePair> unionList, ArrayList<WordNodePair> wordNodePairs, int headIndex) {
         WordNodePair head = wordNodePairs.get(headIndex);
         if (head.getTo() > 0 && head.getTo() < wordNodePairs.size() && headIndex - 1 == head.getTo()) {
             WordNodePair first = wordNodePairs.get(head.getTo() - 1);
             WordNodePair second = wordNodePairs.get(head.getTo());
             if (!first.isDoneForConnect() && head.getUniversalDependency().equals("CONJ") && second.getUniversalDependency().equals("CC") && second.getTo() - 1 == headIndex) {
-                updateUnionCandidateLists(unionList, first);
+                int index = updateUnionCandidateLists(unionList, first);
                 if (noIncomingNodes(wordNodePairs, head.getTo() - 1)) {
                     first.doneForConnect();
                 }
-                return true;
+                return index;
             }
         }
-        return false;
+        return -1;
     }
 
     /**
@@ -302,16 +304,17 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         int total;
         while (true) {
             int j = 0;
+            int index = -1;
             ArrayList<WordNodePair> unionList = new ArrayList<>();
             do {
                 WordNodePair head = wordNodePairs.get(j);
                 if (!head.isDoneForHead()) {
                     unionList = setOfNodesToBeMergedOntoNode(wordNodePairs, head);
-                    if (isSpecialState(unionList, wordNodePairs, j)) {
-                        j++;
+                    index = isSpecialState(unionList, wordNodePairs, j);
+                    j++;
+                    if (index > -1) {
                         break;
                     } else {
-                        j++;
                         total = unionList.size();
                         if (dependencyMap.containsKey(j) && isThereAll(dependencyMap, j, total) && (unionList.size() != 0)) {
                             break;
@@ -321,6 +324,11 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                     j++;
                 }
             } while (j < wordNodePairs.size());
+            for (int i = 0; i < unionList.size(); i++) {
+                if (i != index) {
+                    unionList.get(i).doneForConnect();
+                }
+            }
             wordNodePairs.get(j - 1).doneForHead();
             if (unionList.size() > 0) {
                 merge(wordNodePairs, unionList, j - 1, models);
