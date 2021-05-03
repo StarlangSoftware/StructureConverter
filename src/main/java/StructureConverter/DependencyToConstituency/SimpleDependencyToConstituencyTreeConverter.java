@@ -17,24 +17,6 @@ import java.util.*;
 public class SimpleDependencyToConstituencyTreeConverter implements DependencyToConstituencyTreeConverter {
 
     /**
-     * Creates the {@link HashMap} of priority {@link UniversalDependencyRelation}s.
-     * @return Priority {@link HashMap}.
-     */
-
-    private HashMap<String, Integer> setSpecialMap() {
-        HashMap<String, Integer> map = new HashMap<>();
-        map.put("COMPOUND", 8);
-        map.put("AUX", 7);
-        map.put("DET", 6);
-        map.put("AMOD", 5);
-        map.put("NUMMOD", 4);
-        map.put("CASE", 3);
-        map.put("CCOMP", 2);
-        map.put("NEG", 1);
-        return map;
-    }
-
-    /**
      * Converts all elements in the sentence to the {@link WordNodePair} {@link ArrayList}.
      * @param sentence {@link AnnotatedSentence}.
      * @param fileName Filename of the {@link AnnotatedSentence}.
@@ -196,12 +178,11 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
     /**
      * Merges {@link WordNodePair}s in <code>unionlist</code>.
      * @param wordNodePairs {@link WordNodePair} {@link ArrayList} of all words.
-     * @param specialsMap priority {@link HashMap}.
      * @param unionList {@link ArrayList} of {@link WordNodePair}s to merge.
      * @param i index of headWord.
      */
 
-    private void merge(ArrayList<WordNodePair> wordNodePairs, HashMap<String, Integer> specialsMap, ArrayList<WordNodePair> unionList, int i, ArrayList<TreeEnsembleModel> models) {
+    private void merge(ArrayList<WordNodePair> wordNodePairs, ArrayList<WordNodePair> unionList, int i, ArrayList<TreeEnsembleModel> models) {
         int index = updateUnionCandidateLists(unionList, wordNodePairs.get(i));
         ProjectionOracle oracle;
         if (models == null || unionList.size() > 8) {
@@ -209,7 +190,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         } else {
             oracle = new ClassifierOracle();
         }
-        ArrayList<SimpleEntry<Command, String>> list = oracle.makeCommands(specialsMap, unionList, index, models);
+        ArrayList<SimpleEntry<Command, String>> list = oracle.makeCommands(unionList, index, models);
         ArrayList<WordNodePair> currentUnionList = new ArrayList<>();
         currentUnionList.add(unionList.get(index));
         int leftIndex = 0, rightIndex = 0, iterate = 0;
@@ -310,7 +291,6 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
      */
 
     private ParseTree constructTreeFromWords(ArrayList<WordNodePair> wordNodePairs, HashMap<Integer, ArrayList<Integer>> dependencyMap, ArrayList<TreeEnsembleModel> models) throws FileNotFoundException {
-        HashMap<String, Integer> specialsMap = setSpecialMap();
         int total;
         while (true) {
             int j = 0;
@@ -334,7 +314,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
             } while (true);
             wordNodePairs.get(j - 1).doneForHead();
             if (unionList.size() > 0) {
-                merge(wordNodePairs, specialsMap, unionList, j - 1, models);
+                merge(wordNodePairs, unionList, j - 1, models);
             } else {
                 break;
             }
@@ -400,7 +380,7 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
                 return new ParseTree(parent);
             }
         } catch (MorphologicalAnalysisNotExistsException | UniversalDependencyNotExistsException | ParenthesisInLayerException | NonProjectiveDependencyException | FileNotFoundException e) {
-            System.out.println(e.toString());
+            System.out.println(e);
         }
         return null;
     }
