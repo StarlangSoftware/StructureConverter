@@ -58,7 +58,7 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
                                 }
                             }
                         } else {
-                            wordNodePairList.get(decision.getNo()).done();
+                            wordNodePairList.get(decision.getNo()).doneForConnect();
                             wordNodePairList.get(decision.getNo()).getWord().setUniversalDependency(wordNodePairList.get(decision.getNo() + decision.getTo()).getNo(), decision.getData());
                         }
                     }
@@ -86,7 +86,7 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
             parseNodeDrawableList.clear();
             wordNodePairs.clear();
             for (WordNodePair wordNodePair : wordNodePairList) {
-                if (!wordNodePair.isDone()) {
+                if (!wordNodePair.isDoneForConnect()) {
                     parseNodeDrawableList.add((ParseNodeDrawable) wordNodePair.getNode().getParent());
                     wordNodePairs.add(wordNodePair);
                 }

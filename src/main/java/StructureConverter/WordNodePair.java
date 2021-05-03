@@ -10,7 +10,7 @@ public class WordNodePair {
     private final AnnotatedWord annotatedWord;
     private ParseNodeDrawable node;
     private final int no;
-    private boolean done;
+    private boolean doneForConnect;
     private boolean doneForHead;
 
     public WordNodePair(AnnotatedWord annotatedWord, int no) throws ParenthesisInLayerException {
@@ -26,26 +26,22 @@ public class WordNodePair {
         this.node = new ParseNodeDrawable(parent, annotatedWord.toString().replaceAll("\\(", "-LRB-").replaceAll("\\)", "-RRB-"), true, 0);
         parent.addChild(node);
         this.no = no;
-        this.done = false;
+        this.doneForConnect = false;
         this.doneForHead = false;
     }
 
     public WordNodePair(ParseNodeDrawable parseNodeDrawable, int no) {
         this.node = parseNodeDrawable;
         annotatedWord = new AnnotatedWord(parseNodeDrawable.getLayerData());
-        this.done = false;
+        this.doneForConnect = false;
         this.no = no;
     }
 
     public WordNodePair(AnnotatedWord annotatedWord, ParseNodeDrawable parseNodeDrawable, int no) {
         this.node = parseNodeDrawable;
         this.annotatedWord = annotatedWord;
-        this.done = false;
+        this.doneForConnect = false;
         this.no = no;
-    }
-
-    public String getWordName() {
-        return annotatedWord.getName();
     }
 
     public int getNo() {
@@ -68,16 +64,16 @@ public class WordNodePair {
         return annotatedWord.getUniversalDependency().to();
     }
 
-    public boolean isDone() {
-        return done;
+    public boolean isDoneForConnect() {
+        return doneForConnect;
     }
 
     public boolean isDoneForHead() {
         return doneForHead;
     }
 
-    public void done() {
-        this.done = true;
+    public void doneForConnect() {
+        this.doneForConnect = true;
     }
 
     public void doneForHead() {
@@ -98,6 +94,6 @@ public class WordNodePair {
             return false;
         }
         WordNodePair wordNodePair = (WordNodePair) obj;
-        return this.annotatedWord.equals(wordNodePair.annotatedWord) && this.no == wordNodePair.no && this.done == wordNodePair.done;
+        return this.annotatedWord.equals(wordNodePair.annotatedWord) && this.no == wordNodePair.no && this.doneForConnect == wordNodePair.doneForConnect;
     }
 }
