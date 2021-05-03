@@ -5,7 +5,6 @@ import StructureConverter.WordNodePair;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public abstract class ProjectionOracle {
 
@@ -22,5 +21,5 @@ public abstract class ProjectionOracle {
         return treePos;
     }
 
-    public abstract ArrayList<AbstractMap.SimpleEntry<Command, String>> makeCommands(HashMap<String, Integer> specialsMap, ArrayList<WordNodePair> unionList, int currentIndex, ArrayList<TreeEnsembleModel> models);
+    public abstract ArrayList<AbstractMap.SimpleEntry<Command, String>> makeCommands(ArrayList<WordNodePair> unionList, int currentIndex, ArrayList<TreeEnsembleModel> models);
 }

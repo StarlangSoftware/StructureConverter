@@ -10,14 +10,37 @@ import java.util.AbstractMap.SimpleEntry;
 
 public class BasicOracle extends ProjectionOracle {
 
+    private final HashMap<String, Integer> specialsMap;
+
+    public BasicOracle() {
+        specialsMap = setSpecialMap();
+    }
+
+    /**
+     * Creates the {@link HashMap} of priority {@link UniversalDependencyRelation}s.
+     * @return Priority {@link HashMap}.
+     */
+
+    private HashMap<String, Integer> setSpecialMap() {
+        HashMap<String, Integer> map = new HashMap<>();
+        map.put("COMPOUND", 8);
+        map.put("AUX", 7);
+        map.put("DET", 6);
+        map.put("AMOD", 5);
+        map.put("NUMMOD", 4);
+        map.put("CASE", 3);
+        map.put("CCOMP", 2);
+        map.put("NEG", 1);
+        return map;
+    }
+
     /**
      * @param first first {@link WordNodePair}.
      * @param second second {@link WordNodePair}.
-     * @param specialsMap priority {@link HashMap}.
      * @return which {@link WordNodePair} has priority based on {@link UniversalDependencyRelation}s.
      */
 
-    private int compareTo(WordNodePair first, WordNodePair second, HashMap<String, Integer> specialsMap) {
+    private int compareTo(WordNodePair first, WordNodePair second) {
         String firstUniversalDependency = first.getUniversalDependency();
         String secondUniversalDependency = second.getUniversalDependency();
         if (specialsMap.containsKey(firstUniversalDependency) && specialsMap.containsKey(secondUniversalDependency)) {
@@ -30,10 +53,10 @@ public class BasicOracle extends ProjectionOracle {
         return 0;
     }
 
-    private int addCommandForDecreasing(int index, ArrayList<WordNodePair> unionList, HashMap<String, Integer> specialsMap, ArrayList<SimpleEntry<Command, String>> commands) {
+    private int addCommandForDecreasing(int index, ArrayList<WordNodePair> unionList, ArrayList<SimpleEntry<Command, String>> commands) {
         int i = 0;
         while (index - (i + 1) > -1) {
-            if (compareTo(unionList.get(index - i), unionList.get(index - (i + 1)), specialsMap) == 0) {
+            if (compareTo(unionList.get(index - i), unionList.get(index - (i + 1))) == 0) {
                 commands.add(new SimpleEntry<>(Command.LEFT, null));
             } else {
                 break;
@@ -43,9 +66,9 @@ public class BasicOracle extends ProjectionOracle {
         return i + 1;
     }
 
-    private int addCommandsForLeft(int currentIndex, int i, ArrayList<WordNodePair> unionList, HashMap<String, Integer> specialsMap, ArrayList<SimpleEntry<Command, String>> commands) {
-        if (currentIndex - (i + 1) > -1 && compareTo(unionList.get(currentIndex - i), unionList.get(currentIndex - (i + 1)), specialsMap) == 0) {
-            i += addCommandForDecreasing(currentIndex - i, unionList, specialsMap, commands);
+    private int addCommandsForLeft(int currentIndex, int i, ArrayList<WordNodePair> unionList, ArrayList<SimpleEntry<Command, String>> commands) {
+        if (currentIndex - (i + 1) > -1 && compareTo(unionList.get(currentIndex - i), unionList.get(currentIndex - (i + 1))) == 0) {
+            i += addCommandForDecreasing(currentIndex - i, unionList, commands);
             commands.add(new SimpleEntry<>(Command.LEFT, null));
         } else {
             commands.add(new SimpleEntry<>(Command.LEFT, null));
@@ -147,16 +170,16 @@ public class BasicOracle extends ProjectionOracle {
     }
 
     @Override
-    public ArrayList<SimpleEntry<Command, String>> makeCommands(HashMap<String, Integer> specialsMap, ArrayList<WordNodePair> unionList, int currentIndex, ArrayList<TreeEnsembleModel> models) {
+    public ArrayList<SimpleEntry<Command, String>> makeCommands(ArrayList<WordNodePair> unionList, int currentIndex, ArrayList<TreeEnsembleModel> models) {
         String treePos = setTreePos(unionList, unionList.get(currentIndex).getTreePos());
         if (unionList.size() > 2) {
             int i = 1, j = 1, specialIndex = -1;
             ArrayList<SimpleEntry<Command, String>> commands = new ArrayList<>();
             while (currentIndex - i > -1 || currentIndex + j < unionList.size()) {
                 if (currentIndex - i > -1 && currentIndex + j < unionList.size()) {
-                    int comparisonResult = compareTo(unionList.get(currentIndex - i), unionList.get(currentIndex + j), specialsMap);
+                    int comparisonResult = compareTo(unionList.get(currentIndex - i), unionList.get(currentIndex + j));
                     if (comparisonResult > 0) {
-                        i = addCommandsForLeft(currentIndex, i, unionList, specialsMap, commands);
+                        i = addCommandsForLeft(currentIndex, i, unionList, commands);
                     } else if (comparisonResult < 0) {
                         commands.add(new SimpleEntry<>(Command.RIGHT, null));
                         commands.add(new SimpleEntry<>(Command.MERGE, treePos));
@@ -174,7 +197,7 @@ public class BasicOracle extends ProjectionOracle {
                     }
                 } else if (currentIndex - i > -1) {
                     if (specialsMap.containsKey(unionList.get(currentIndex - i).getUniversalDependency())) {
-                        i = addCommandsForLeft(currentIndex, i, unionList, specialsMap, commands);
+                        i = addCommandsForLeft(currentIndex, i, unionList, commands);
                     } else {
                         if (unionList.get(currentIndex - i).getUniversalDependency().equals("NSUBJ") || unionList.get(currentIndex - i).getUniversalDependency().equals("CSUBJ")) {
                             specialIndex = currentIndex - i;

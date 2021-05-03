@@ -80,7 +80,7 @@ public class ClassifierOracle extends ProjectionOracle {
     }
 
     @Override
-    public ArrayList<SimpleEntry<Command, String>> makeCommands(HashMap<String, Integer> specialsMap, ArrayList<WordNodePair> unionList, int currentIndex, ArrayList<TreeEnsembleModel> models) {
+    public ArrayList<SimpleEntry<Command, String>> makeCommands(ArrayList<WordNodePair> unionList, int currentIndex, ArrayList<TreeEnsembleModel> models) {
         ArrayList<Attribute> testData = setTestData(unionList, currentIndex);
         HashMap<String, Double> classInfo;
         switch (unionList.size()) {
@@ -98,7 +98,7 @@ public class ClassifierOracle extends ProjectionOracle {
                 return findList(classInfo, currentIndex, unionList, unionList.get(currentIndex).getTreePos());
             case 4:
                 classInfo = models.get(1).predictProbability(new Instance("", testData));
-                return findList( classInfo, currentIndex, unionList, unionList.get(currentIndex).getTreePos());
+                return findList(classInfo, currentIndex, unionList, unionList.get(currentIndex).getTreePos());
             case 5:
                 classInfo = models.get(2).predictProbability(new Instance("", testData));
                 return findList(classInfo, currentIndex, unionList, unionList.get(currentIndex).getTreePos());
