@@ -14,8 +14,10 @@ import java.util.AbstractMap.SimpleEntry;
 public class ClassifierOracle extends ProjectionOracle {
 
     private static ArrayList<String[]> dataList;
+    private final ArrayList<TreeEnsembleModel> models;
 
-    public ClassifierOracle() {
+    public ClassifierOracle(ArrayList<TreeEnsembleModel> models) {
+        this.models = models;
         dataList = new ArrayList<>();
         try {
             Scanner source = new Scanner(FileUtils.getInputStream("DepToCons/dataset.txt"));
@@ -80,7 +82,7 @@ public class ClassifierOracle extends ProjectionOracle {
     }
 
     @Override
-    public ArrayList<SimpleEntry<Command, String>> makeCommands(ArrayList<WordNodePair> unionList, int currentIndex, ArrayList<TreeEnsembleModel> models) {
+    public ArrayList<SimpleEntry<Command, String>> makeCommands(ArrayList<WordNodePair> unionList, int currentIndex) {
         ArrayList<Attribute> testData = setTestData(unionList, currentIndex);
         HashMap<String, Double> classInfo;
         switch (unionList.size()) {

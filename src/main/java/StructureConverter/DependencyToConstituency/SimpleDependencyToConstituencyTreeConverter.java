@@ -175,9 +175,9 @@ public class SimpleDependencyToConstituencyTreeConverter implements DependencyTo
         if (models == null || unionList.size() > 8) {
             oracle = new BasicOracle();
         } else {
-            oracle = new ClassifierOracle();
+            oracle = new ClassifierOracle(models);
         }
-        ArrayList<SimpleEntry<Command, String>> list = oracle.makeCommands(unionList, index, models);
+        ArrayList<SimpleEntry<Command, String>> list = oracle.makeCommands(unionList, index);
         ArrayList<WordNodePair> currentUnionList = new ArrayList<>();
         currentUnionList.add(unionList.get(index));
         int leftIndex = 0, rightIndex = 0, iterate = 0;

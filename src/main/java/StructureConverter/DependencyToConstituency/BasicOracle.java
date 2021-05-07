@@ -1,6 +1,5 @@
 package StructureConverter.DependencyToConstituency;/* Created by oguzkeremyildiz on 2.02.2021 */
 
-import Classification.Model.TreeEnsembleModel;
 import DependencyParser.UniversalDependencyRelation;
 import StructureConverter.WordNodePair;
 
@@ -170,7 +169,7 @@ public class BasicOracle extends ProjectionOracle {
     }
 
     @Override
-    public ArrayList<SimpleEntry<Command, String>> makeCommands(ArrayList<WordNodePair> unionList, int currentIndex, ArrayList<TreeEnsembleModel> models) {
+    public ArrayList<SimpleEntry<Command, String>> makeCommands(ArrayList<WordNodePair> unionList, int currentIndex) {
         String treePos = setTreePos(unionList, unionList.get(currentIndex).getTreePos());
         if (unionList.size() > 2) {
             int i = 1, j = 1, specialIndex = -1;

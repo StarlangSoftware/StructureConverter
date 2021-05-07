@@ -19,8 +19,10 @@ import java.util.Scanner;
 public class ClassifierDependencyOracle implements DependencyOracle {
 
     private static ArrayList<String[]> dataList;
+    private final ArrayList<TreeEnsembleModel> models;
 
-    public ClassifierDependencyOracle() {
+    public ClassifierDependencyOracle(ArrayList<TreeEnsembleModel> models) {
+        this.models = models;
         dataList = new ArrayList<>();
         try {
             Scanner source = new Scanner(FileUtils.getInputStream("ConsToDep/dataset.txt"));
@@ -92,7 +94,7 @@ public class ClassifierDependencyOracle implements DependencyOracle {
     }
 
     @Override
-    public ArrayList<Decision> makeDecisions(int firstIndex, int lastIndex, ArrayList<WordNodePair> wordNodePairList, ParseNodeDrawable node, ArrayList<TreeEnsembleModel> models) {
+    public ArrayList<Decision> makeDecisions(int firstIndex, int lastIndex, ArrayList<WordNodePair> wordNodePairList, ParseNodeDrawable node) {
         ArrayList<Attribute> testData = new ArrayList<>(lastIndex + 1 - firstIndex);
         String classInfo;
         ArrayList<SimpleEntry<Integer, Integer>> list = new ArrayList<>();

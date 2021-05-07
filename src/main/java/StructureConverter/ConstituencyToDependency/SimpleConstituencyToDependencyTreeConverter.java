@@ -45,9 +45,9 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
                     if (models == null || last - i + 1 > 7) {
                         oracle = new BasicDependencyOracle();
                     } else {
-                        oracle = new ClassifierDependencyOracle();
+                        oracle = new ClassifierDependencyOracle(models);
                     }
-                    ArrayList<Decision> decisions = oracle.makeDecisions(i, last, wordNodePairList, parseNodeDrawableList.get(i), models);
+                    ArrayList<Decision> decisions = oracle.makeDecisions(i, last, wordNodePairList, parseNodeDrawableList.get(i));
                     for (int j = 0; j < decisions.size(); j++) {
                         Decision decision = decisions.get(j);
                         if (decision.getNo() < 0) {
