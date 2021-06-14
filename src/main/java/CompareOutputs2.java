@@ -1,88 +1,42 @@
-import AnnotatedTree.ParseNodeDrawable;
-import AnnotatedTree.ParseTreeDrawable;
+import AnnotatedTree.*;
 import AnnotatedTree.Processor.Condition.IsTurkishLeafNode;
 import AnnotatedTree.Processor.NodeDrawableCollector;
-import AnnotatedTree.TreeBankDrawable;
-import ParseTree.ParseTree;
-import ParseTree.ParseNode;
-import java.util.AbstractMap.SimpleEntry;
+import ParseTree.*;
 
 import java.io.File;
 import java.util.*;
 
 public class CompareOutputs2 {
 
-    private static int traverseTrees(ParseNodeDrawable node1, ParseNodeDrawable node2, HashSet<ParseNodeDrawable> set, int correct, HashMap<String, HashMap<String, Integer>> tagMap, HashMap<String, Integer> wrongMap) {
-        ParseNodeDrawable node2FirstChild = (ParseNodeDrawable) node2.getChild(0);
-        if (node2FirstChild.getLayerInfo() != null){
-            return correct;
+    private static void traverseTree(HashMap<ArrayList<Integer>, String> map, HashMap<ParseNodeDrawable, Integer> nodeMap, ParseNode node) {
+        ArrayList<ParseNodeDrawable> list = new NodeDrawableCollector((ParseNodeDrawable) node, new IsTurkishLeafNode()).collect();
+        ArrayList<Integer> key = new ArrayList<>();
+        for (ParseNodeDrawable nodeDrawable : list) {
+            key.add(nodeMap.get(nodeDrawable));
         }
-        for (int i = 0; i < node1.numberOfChildren(); i++) {
-            ParseNodeDrawable node1Child = (ParseNodeDrawable) node1.getChild(i);
-            if (node1Child.getLayerInfo() == null) {
-                if (!tagMap.containsKey(node1Child.getData().getName())) {
-                    tagMap.put(node1Child.getData().getName(), new HashMap<>());
-                }
+        map.put(key, node.getData().getName());
+        for (int i = 0; i < node.numberOfChildren(); i++) {
+            ParseNode child = node.getChild(i);
+            if (!child.isLeaf()) {
+                traverseTree(map, nodeMap, child);
             }
-            if (node2.numberOfChildren() > i) {
-                ParseNodeDrawable node2Child = (ParseNodeDrawable) node2.getChild(i);
-                if (!set.contains(node1Child)) {
-                    if (node1Child.getLayerInfo() == null && node2Child.getLayerInfo() == null) {
-                        if (!tagMap.get(node1Child.getData().getName()).containsKey(node2Child.getData().getName())) {
-                            tagMap.get(node1Child.getData().getName()).put(node2Child.getData().getName(), 0);
-                        }
-                        tagMap.get(node1Child.getData().getName()).put(node2Child.getData().getName(), tagMap.get(node1Child.getData().getName()).get(node2Child.getData().getName()) + 1);
-                        if (node1Child.getData().getName().equals(node2Child.getData().getName())) {
-                            correct++;
-                        } else {
-                            if (!wrongMap.containsKey(node1Child.getData().getName())) {
-                                wrongMap.put(node1Child.getData().getName(), 0);
-                            }
-                            wrongMap.put(node1Child.getData().getName(), wrongMap.get(node1Child.getData().getName()) + 1);
-                        }
-                        set.add(node1Child);
-                        correct = traverseTrees(node1Child, node2Child, set, correct, tagMap, wrongMap);
-                    }
-                }
-            } else {
-                if (!tagMap.get(node1Child.getData().getName()).containsKey("null")) {
-                    tagMap.get(node1Child.getData().getName()).put("null", 0);
-                }
-                tagMap.get(node1Child.getData().getName()).put("null", tagMap.get(node1Child.getData().getName()).get("null") + 1);
-            }
-        }
-        return correct;
-    }
-
-    private static void addWorstList(ArrayList<SimpleEntry<String, Double>> worstList, SimpleEntry<String, Double> entry) {
-        int bestIndex = -1;
-        double bestPoint = 0.0;
-        for (int i = 0; i < worstList.size(); i++) {
-            if (worstList.get(i).getValue() > bestPoint) {
-                bestIndex = i;
-                bestPoint = worstList.get(i).getValue();
-            }
-        }
-        if (entry.getValue() < bestPoint) {
-            worstList.set(bestIndex, entry);
         }
     }
 
-    private static void fillMap(int correct, int nodeCount, HashMap<Integer, Integer> map, ArrayList<SimpleEntry<String, Double>> worstList, String name, LinkedHashMap<String, Double> allPoints) {
-        int wrong = nodeCount - correct;
-        map.put(1, map.get(1) + correct);
-        map.put(0, map.get(0) + wrong);
-        allPoints.put(name, correct / (nodeCount + 0.0));
-        if (worstList.size() < 100) {
-            worstList.add(new SimpleEntry<>(name, correct / (nodeCount + 0.0)));
-        } else {
-            addWorstList(worstList, new SimpleEntry<>(name, correct / (nodeCount + 0.0)));
+    private static HashMap<ArrayList<Integer>, String> generateMap(ParseTreeDrawable tree) {
+        HashMap<ArrayList<Integer>, String> map = new HashMap<>();
+        HashMap<ParseNodeDrawable, Integer> nodeMap = new HashMap<>();
+        ParseNode root = tree.getRoot();
+        ArrayList<ParseNodeDrawable> list = new NodeDrawableCollector((ParseNodeDrawable) root, new IsTurkishLeafNode()).collect();
+        for (int i = 0; i < list.size(); i++) {
+            nodeMap.put(list.get(i), i);
         }
+        traverseTree(map, nodeMap, root);
+        return map;
     }
 
     private static void printScores(HashMap<String, HashMap<String, Integer>> tagMap) {
         System.out.println("Recall:");
-        double totalCorrect = 0.0, total = 0.0;
         for (String key1 : tagMap.keySet()) {
             int correct = 0, keyTotal = 0;
             if (tagMap.get(key1).containsKey(key1)) {
@@ -92,19 +46,14 @@ public class CompareOutputs2 {
                 keyTotal += tagMap.get(key1).get(key2);
             }
             System.out.println(key1 + " -> " + correct / (keyTotal + 0.0));
-            totalCorrect += correct + 0.0;
-            total += keyTotal + 0.0;
         }
-        System.out.println(totalCorrect / total);
         System.out.println("Precision:");
         HashSet<String> stringSet = new HashSet<>();
         for (String key1 : tagMap.keySet()) {
             stringSet.add(key1);
             stringSet.addAll(tagMap.get(key1).keySet());
         }
-        stringSet.remove("null");
-        totalCorrect = 0.0;
-        total = 0.0;
+        stringSet.remove(null);
         for (String key1 : stringSet) {
             int correct = 0, keyTotal = 0;
             for (String key2 : stringSet) {
@@ -116,110 +65,66 @@ public class CompareOutputs2 {
                 }
             }
             System.out.println(key1 + " -> " + correct / (keyTotal + 0.0));
-            totalCorrect += correct + 0.0;
-            total += keyTotal + 0.0;
         }
-        System.out.println(totalCorrect / total);
     }
 
-    private static boolean equals(ArrayList<ParseNodeDrawable> p1, ArrayList<ParseNodeDrawable> p2) {
-        if (p1.size() != p2.size()) {
-            return false;
-        }
-        for (int i = 0; i < p1.size(); i++) {
-            if (!p1.get(i).getParent().getData().getName().equals(p2.get(i).getParent().getData().getName())) {
-                return false;
+    private static void generateSolutions(HashMap<ArrayList<Integer>, String> drawableMap1, HashMap<ArrayList<Integer>, String> drawableMap2, int[] accuracy, int[] precision, int[] recall, HashMap<String, HashMap<String, Integer>> tagMap) {
+        precision[1] += drawableMap2.size();
+        recall[1] += drawableMap1.size();
+        for (ArrayList<Integer> key : drawableMap1.keySet()) {
+            if (drawableMap1.get(key).equals(drawableMap2.get(key))) {
+                accuracy[0]++;
+                precision[0]++;
+                recall[0]++;
             }
+            accuracy[1]++;
+            if (!tagMap.containsKey(drawableMap1.get(key))) {
+                tagMap.put(drawableMap1.get(key), new HashMap<>());
+            }
+            if (!tagMap.get(drawableMap1.get(key)).containsKey(drawableMap2.get(key))) {
+                tagMap.get(drawableMap1.get(key)).put(drawableMap2.get(key), 0);
+            }
+            tagMap.get(drawableMap1.get(key)).put(drawableMap2.get(key), tagMap.get(drawableMap1.get(key)).get(drawableMap2.get(key)) + 1);
+            drawableMap2.remove(key);
         }
-        return true;
+        for (int i = 0; i < drawableMap2.size(); i++) {
+            accuracy[1]++;
+        }
     }
 
     public static void main(String[]args) {
-        TreeBankDrawable treeBankDrawable1 = new TreeBankDrawable(new File("Turkish2"));
-        TreeBankDrawable treeBankDrawable2 = new TreeBankDrawable(new File("Turkish3"));
-        ArrayList<SimpleEntry<String, Double>> worstList = new ArrayList<>(100);
-        List<ParseTree> parseTrees1 = treeBankDrawable1.getParseTrees();
-        List<ParseTree> parseTrees2 = treeBankDrawable2.getParseTrees();
-        LinkedHashMap<String, Double> allPoints = new LinkedHashMap<>();
-        HashMap<Integer, Integer> map = new HashMap<>();
+        int[] accuracy = new int[2];
+        int[] precision = new int[2];
+        int[] recall = new int[2];
         HashMap<String, HashMap<String, Integer>> tagMap = new HashMap<>();
-        HashMap<Integer, SimpleEntry<Integer, Integer>> sentenceMap = new HashMap<>();
-        HashMap<String, Integer> wrongMap = new HashMap<>();
-        ArrayList<String> firstList = new ArrayList<>();
-        ArrayList<String> secondList = new ArrayList<>();
-        map.put(0, 0);
-        map.put(1, 0);
-        int i = 0, j = 0;
-        while (i < parseTrees1.size() || j < parseTrees2.size()) {
-            ParseTreeDrawable parseTreeDrawable1 = (ParseTreeDrawable) parseTrees1.get(i);
-            ParseTreeDrawable parseTreeDrawable2 = (ParseTreeDrawable) parseTrees2.get(j);
-            if (parseTreeDrawable1.getName().equals(parseTreeDrawable2.getName())) {
-                String first = parseTreeDrawable1.generateAnnotatedSentence().toWords();
-                String second = parseTreeDrawable2.generateAnnotatedSentence().toWords();
-                NodeDrawableCollector n1 = new NodeDrawableCollector((ParseNodeDrawable) parseTreeDrawable1.getRoot(), new IsTurkishLeafNode());
-                NodeDrawableCollector n2 = new NodeDrawableCollector((ParseNodeDrawable) parseTreeDrawable2.getRoot(), new IsTurkishLeafNode());
-                ArrayList<ParseNodeDrawable> parseNodeDrawables1 = n1.collect();
-                ArrayList<ParseNodeDrawable> parseNodeDrawables2 = n2.collect();
-                if (first.toLowerCase(new Locale("tr")).equals(second.toLowerCase(new Locale("tr")))) {
-                    ParseNode node1 = parseTreeDrawable1.getRoot();
-                    ParseNode node2 = parseTreeDrawable2.getRoot();
-                    if (node1.numberOfChildren() > node2.numberOfChildren()) {
-                        firstList.add(parseTreeDrawable1.getName());
-                    } else if (node1.numberOfChildren() < node2.numberOfChildren()) {
-                        secondList.add(parseTreeDrawable1.getName());
+        TreeBankDrawable treeBankDrawable = new TreeBankDrawable(new File("Turkish2"));
+        String bankName = "Turkish3";
+        List<ParseTree> parseTrees = treeBankDrawable.getParseTrees();
+        int totalTreeNumber = 0;
+        for (ParseTree parseTree : parseTrees) {
+            ParseTreeDrawable drawable1 = (ParseTreeDrawable) parseTree;
+            if (!drawable1.getName().contains("train")) {
+                try {
+                    ParseTreeDrawable drawable2 = new ParseTreeDrawable(bankName, drawable1.getName());
+                    String first = drawable1.generateAnnotatedSentence().toWords();
+                    String second = drawable2.generateAnnotatedSentence().toWords();
+                    if (first.toLowerCase(new Locale("tr")).equals(second.toLowerCase(new Locale("tr")))) {
+                        HashMap<ArrayList<Integer>, String> drawableMap1 = generateMap(drawable1);
+                        HashMap<ArrayList<Integer>, String> drawableMap2 = generateMap(drawable2);
+                        generateSolutions(drawableMap1, drawableMap2, accuracy, precision, recall, tagMap);
                     }
-                    if (node1.getData().getName().equals(node2.getData().getName())) {
-                        int current = map.get(0);
-                        HashSet<ParseNodeDrawable> set = new HashSet<>();
-                        set.add((ParseNodeDrawable) node1);
-                        int correct = 1;
-                        if (!tagMap.containsKey(node1.getData().getName())) {
-                            tagMap.put(node1.getData().getName(), new HashMap<>());
-                        }
-                        if (!tagMap.get(node1.getData().getName()).containsKey(node2.getData().getName())) {
-                            tagMap.get(node1.getData().getName()).put(node2.getData().getName(), 0);
-                        }
-                        tagMap.get(node1.getData().getName()).put(node2.getData().getName(), tagMap.get(node1.getData().getName()).get(node2.getData().getName()) + 1);
-                        correct = traverseTrees((ParseNodeDrawable) node1, (ParseNodeDrawable) node2, set, correct, tagMap, wrongMap);
-                        fillMap(correct, node2.nodeCount() - node2.leafCount(), map, worstList, parseTreeDrawable2.getName(), allPoints);
-                        int wordCount = parseTreeDrawable2.generateAnnotatedSentence().wordCount();
-                        if (!sentenceMap.containsKey(wordCount)) {
-                            sentenceMap.put(wordCount, new SimpleEntry<>(0, 0));
-                        }
-                        sentenceMap.put(wordCount, new SimpleEntry<>(sentenceMap.get(wordCount).getKey() + correct, sentenceMap.get(wordCount).getValue() + node2.nodeCount() - node2.leafCount()));
-                    }
-                } else {
-                    System.out.println(parseTreeDrawable2.getName() + " can't done." + "\t" + first + "\t" + second);
-                }
-                i++;
-                j++;
-            } else if (parseTreeDrawable1.getName().compareTo(parseTreeDrawable2.getName()) > 0) {
-                j++;
-            } else {
-                i++;
+                    totalTreeNumber++;
+                } catch (Exception ignored) {}
             }
         }
-        System.out.println("0: " + map.get(0));
-        System.out.println("1: " + map.get(1));
-        System.out.println("success rate: %" + (map.get(1) * 100.00) / (map.get(1) + map.get(0)));
+        double precisions = ((precision[0] * 100.00) / precision[1]);
+        double recalls = ((recall[0] * 100.00) / recall[1]);
+        System.out.println("correct trees: Turkish2" + " computed trees: " + bankName);
+        System.out.println("precision: " + precisions);
+        System.out.println("recall: " + recalls);
+        System.out.println("F-score: " + (2 * precisions * recalls) / (precisions + recalls));
+        System.out.println("accuracy: " + ((accuracy[0] * 100.00) / accuracy[1]));
+        System.out.println("total tree: " + totalTreeNumber);
         printScores(tagMap);
-        for (Integer key : sentenceMap.keySet()) {
-            System.out.println(key + ": " + sentenceMap.get(key).getKey() + " " + sentenceMap.get(key).getValue());
-        }
-        System.out.println("En kötü 100:");
-        for (SimpleEntry<String, Double> entry : worstList) {
-            System.out.println(entry);
-        }
-        System.out.println("Turkish2'de fazla olanlar: " + firstList.size());
-        for (String element : firstList) {
-            System.out.println(element);
-        }
-        System.out.println("Turkish3'de fazla olanlar: " + secondList.size());
-        for (String element : secondList) {
-            System.out.println(element);
-        }
-        for (String key : allPoints.keySet()) {
-            System.out.println(key + " " + allPoints.get(key));
-        }
     }
 }
