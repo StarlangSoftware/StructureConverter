@@ -141,12 +141,14 @@ public class CompareOutputs1 {
             AnnotatedSentence annotatedSentence1 = (AnnotatedSentence) annotatedCorpus1.getSentence(i);
             AnnotatedSentence annotatedSentence2 = (AnnotatedSentence) annotatedCorpus2.getSentence(j);
             if (annotatedSentence1.getFileName().equals(annotatedSentence2.getFileName())) {
-                String first = annotatedSentence1.toWords();
-                String second = annotatedSentence2.toWords();
-                if (first.toLowerCase(new Locale("tr")).equals(second.toLowerCase(new Locale("tr")))) {
-                    fillMap(annotatedSentence1, annotatedSentence2, map, wordCountMap, tagMap, dependencyMap);
-                } else {
-                    System.out.println(annotatedSentence1.getFileName() + " can't done." + "\t" + first + "\t" + second);
+                if (!annotatedSentence1.getFileName().contains("train")) {
+                    String first = annotatedSentence1.toWords();
+                    String second = annotatedSentence2.toWords();
+                    if (first.toLowerCase(new Locale("tr")).equals(second.toLowerCase(new Locale("tr")))) {
+                        fillMap(annotatedSentence1, annotatedSentence2, map, wordCountMap, tagMap, dependencyMap);
+                    } else {
+                        System.out.println(annotatedSentence1.getFileName() + " can't done." + "\t" + first + "\t" + second);
+                    }
                 }
                 i++;
                 j++;
