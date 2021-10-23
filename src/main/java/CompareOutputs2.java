@@ -97,24 +97,21 @@ public class CompareOutputs2 {
         int[] precision = new int[2];
         int[] recall = new int[2];
         HashMap<String, HashMap<String, Integer>> tagMap = new HashMap<>();
-        TreeBankDrawable treeBankDrawable = new TreeBankDrawable(new File("Turkish2"));
         String bankName = "Turkish3";
-        List<ParseTree> parseTrees = treeBankDrawable.getParseTrees();
         int totalTreeNumber = 0;
-        for (ParseTree parseTree : parseTrees) {
-            ParseTreeDrawable drawable1 = (ParseTreeDrawable) parseTree;
+        ParallelTreeBankDrawable parallelTreeBankDrawable = new ParallelTreeBankDrawable(new File("Turkish2"), new File(bankName));
+        for (int i = 0; i < parallelTreeBankDrawable.size(); i++) {
+            ParseTreeDrawable drawable1 = parallelTreeBankDrawable.fromTree(i);
             if (!drawable1.getName().contains("train")) {
-                try {
-                    ParseTreeDrawable drawable2 = new ParseTreeDrawable(bankName, drawable1.getName());
-                    String first = drawable1.generateAnnotatedSentence().toWords();
-                    String second = drawable2.generateAnnotatedSentence().toWords();
-                    if (first.toLowerCase(new Locale("tr")).equals(second.toLowerCase(new Locale("tr")))) {
-                        HashMap<ArrayList<Integer>, String> drawableMap1 = generateMap(drawable1);
-                        HashMap<ArrayList<Integer>, String> drawableMap2 = generateMap(drawable2);
-                        generateSolutions(drawableMap1, drawableMap2, accuracy, precision, recall, tagMap);
-                    }
-                    totalTreeNumber++;
-                } catch (Exception ignored) {}
+                ParseTreeDrawable drawable2 = parallelTreeBankDrawable.toTree(i);
+                String first = drawable1.generateAnnotatedSentence().toWords();
+                String second = drawable2.generateAnnotatedSentence().toWords();
+                if (first.toLowerCase(new Locale("tr")).equals(second.toLowerCase(new Locale("tr")))) {
+                    HashMap<ArrayList<Integer>, String> drawableMap1 = generateMap(drawable1);
+                    HashMap<ArrayList<Integer>, String> drawableMap2 = generateMap(drawable2);
+                    generateSolutions(drawableMap1, drawableMap2, accuracy, precision, recall, tagMap);
+                }
+                totalTreeNumber++;
             }
         }
         double precisions = ((precision[0] * 100.00) / precision[1]);
