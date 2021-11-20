@@ -1,9 +1,11 @@
 package StructureConverter;
 
 import AnnotatedSentence.AnnotatedWord;
+import AnnotatedSentence.ViewLayerType;
 import AnnotatedTree.ParenthesisInLayerException;
 import AnnotatedTree.ParseNodeDrawable;
 import ParseTree.Symbol;
+import StructureConverter.ConstituencyToDependency.Language;
 
 public class WordNodePair {
 
@@ -30,9 +32,14 @@ public class WordNodePair {
         this.doneForHead = false;
     }
 
-    public WordNodePair(ParseNodeDrawable parseNodeDrawable, int no) {
+    public WordNodePair(ParseNodeDrawable parseNodeDrawable, Language language, int no) {
         this.node = parseNodeDrawable;
-        annotatedWord = new AnnotatedWord(parseNodeDrawable.getLayerData());
+        if (language.equals(Language.TURKISH)) {
+            parseNodeDrawable.getLayerInfo().removeLayer(ViewLayerType.ENGLISH_WORD);
+            annotatedWord = new AnnotatedWord(parseNodeDrawable.getLayerData());
+        } else {
+            annotatedWord = new AnnotatedWord("{english=" + parseNodeDrawable.getData().getName() + "}{posTag=" + parseNodeDrawable.getParent().getData().getName() + "}");
+        }
         this.doneForConnect = false;
         this.no = no;
     }

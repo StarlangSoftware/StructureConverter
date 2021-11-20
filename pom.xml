@@ -49,7 +49,7 @@
         <dependency>
             <groupId>io.github.oguzkeremyildiz</groupId>
             <artifactId>Cookies</artifactId>
-            <version>1.5.7</version>
+            <version>1.5.8</version>
         </dependency>
         <dependency>
             <groupId>io.github.starlangsoftware</groupId>
@@ -59,27 +59,32 @@
         <dependency>
             <groupId>io.github.starlangsoftware</groupId>
             <artifactId>Classification</artifactId>
-            <version>1.0.7</version>
+            <version>1.0.8</version>
         </dependency>
         <dependency>
             <groupId>io.github.starlangsoftware</groupId>
             <artifactId>AnnotatedSentence</artifactId>
-            <version>1.0.12</version>
+            <version>1.0.45</version>
         </dependency>
         <dependency>
             <groupId>io.github.starlangsoftware</groupId>
             <artifactId>ParseTree</artifactId>
-            <version>1.0.4</version>
+            <version>1.0.7</version>
         </dependency>
         <dependency>
             <groupId>io.github.starlangsoftware</groupId>
             <artifactId>MorphologicalAnalysis</artifactId>
-            <version>1.0.21</version>
+            <version>1.0.47</version>
         </dependency>
         <dependency>
             <groupId>io.github.starlangsoftware</groupId>
             <artifactId>AnnotatedTree</artifactId>
-            <version>1.0.10</version>
+            <version>1.0.31</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.starlangsoftware</groupId>
+            <artifactId>Translation</artifactId>
+            <version>1.0.4</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

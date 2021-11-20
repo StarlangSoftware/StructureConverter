@@ -10,7 +10,7 @@ import StructureConverter.*;
 
 import java.io.FileNotFoundException;
 import java.util.AbstractMap.SimpleEntry;
-import DependencyParser.UniversalDependencyRelation;
+import DependencyParser.Universal.UniversalDependencyRelation;
 
 import java.util.*;
 

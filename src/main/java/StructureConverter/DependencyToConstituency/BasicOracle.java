@@ -1,6 +1,6 @@
 package StructureConverter.DependencyToConstituency;/* Created by oguzkeremyildiz on 2.02.2021 */
 
-import DependencyParser.UniversalDependencyRelation;
+import DependencyParser.Universal.UniversalDependencyRelation;
 import StructureConverter.WordNodePair;
 
 import java.util.ArrayList;

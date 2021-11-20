@@ -5,8 +5,6 @@ import AnnotatedTree.ParseNodeDrawable;
 import AnnotatedTree.ParseTreeDrawable;
 import AnnotatedTree.Processor.Condition.IsLeafNode;
 import AnnotatedTree.Processor.NodeDrawableCollector;
-import Classification.Model.Model;
-import Classification.Model.TreeEnsembleModel;
 import StructureConverter.MorphologicalAnalysisNotExistsException;
 import StructureConverter.WordNodePair;
 
@@ -30,22 +28,26 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
     }
 
     /**
-     * Adds {@link DependencyParser.UniversalDependencyRelation} to <code>wordNodePairList</code>.
+     * Adds {@link DependencyParser.Universal.UniversalDependencyRelation} to <code>wordNodePairList</code>.
      * @param parseNodeDrawableList {@link ParseNodeDrawable} {@link ArrayList}.
      * @param wordNodePairList {@link WordNodePair} {@link ArrayList}.
-     * @param models {@link ArrayList} of {@link Model}s.
+     * @param parameter {@link Parameter}.
      */
 
-    private void addUniversalDependency(ArrayList<ParseNodeDrawable> parseNodeDrawableList, ArrayList<WordNodePair> wordNodePairList, ArrayList<TreeEnsembleModel> models) {
+    private void addUniversalDependency(ArrayList<ParseNodeDrawable> parseNodeDrawableList, ArrayList<WordNodePair> wordNodePairList, Parameter parameter) {
         for (int i = 0; i < parseNodeDrawableList.size() - 1; i++) {
             if (parseNodeDrawableList.get(i).equals(parseNodeDrawableList.get(i + 1))) {
                 int last = findEndingNode(i, wordNodePairList);
                 if (last - i + 1 == parseNodeDrawableList.get(i).numberOfChildren()) {
                     DependencyOracle oracle;
-                    if (models == null || last - i + 1 > 7) {
-                        oracle = new BasicDependencyOracle();
+                    if (parameter.getLanguage().equals(Language.TURKISH)) {
+                        if (!parameter.getModel() || last - i + 1 > 7) {
+                            oracle = new BasicDependencyOracle();
+                        } else {
+                            oracle = new ClassifierDependencyOracle(parameter.getModels());
+                        }
                     } else {
-                        oracle = new ClassifierDependencyOracle(models);
+                        oracle = new EnglishBasicDependencyOracle();
                     }
                     ArrayList<Decision> decisions = oracle.makeDecisions(i, last, wordNodePairList, parseNodeDrawableList.get(i));
                     for (int j = 0; j < decisions.size(); j++) {
@@ -71,10 +73,10 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
     /**
      * Sets <code>wordNodePairList</code>.
      * @param wordNodePairList {@link WordNodePair} {@link ArrayList}.
-     * @param models {@link ArrayList} of {@link Model}s.
+     * @param parameter {@link Parameter}.
      */
 
-    private void constructDependenciesFromTree(ArrayList<WordNodePair> wordNodePairList, ArrayList<TreeEnsembleModel> models) {
+    private void constructDependenciesFromTree(ArrayList<WordNodePair> wordNodePairList, Parameter parameter) {
         setRoot(wordNodePairList);
         ArrayList<ParseNodeDrawable> parseNodeDrawableList = new ArrayList<>();
         ArrayList<WordNodePair> wordNodePairs = new ArrayList<>(wordNodePairList);
@@ -82,7 +84,7 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
             parseNodeDrawableList.add((ParseNodeDrawable) wordNodePair.getNode().getParent());
         }
         while (parseNodeDrawableList.size() > 1) {
-            addUniversalDependency(parseNodeDrawableList, wordNodePairs, models);
+            addUniversalDependency(parseNodeDrawableList, wordNodePairs, parameter);
             parseNodeDrawableList.clear();
             wordNodePairs.clear();
             for (WordNodePair wordNodePair : wordNodePairList) {
@@ -95,7 +97,7 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
     }
 
     /**
-     * Changes root's {@link DependencyParser.UniversalDependencyType}.
+     * Changes root's {@link DependencyParser.Universal.UniversalDependencyType}.
      * @param wordNodePairList {@link WordNodePair} {@link ArrayList}.
      */
 
@@ -116,12 +118,12 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
     /**
      * Converts {@link ParseTreeDrawable} to {@link AnnotatedSentence}.
      * @param parseTree {@link ParseTreeDrawable} to convert.
-     * @param models {@link ArrayList} of {@link Model}s.
+     * @param parameter {@link Parameter}.
      * @return a {@link AnnotatedSentence}.
      */
 
     @Override
-    public AnnotatedSentence convert(ParseTreeDrawable parseTree, ArrayList<TreeEnsembleModel> models) throws MorphologicalAnalysisNotExistsException {
+    public AnnotatedSentence convert(ParseTreeDrawable parseTree, Parameter parameter) throws MorphologicalAnalysisNotExistsException {
         if (parseTree != null) {
             AnnotatedSentence annotatedSentence = new AnnotatedSentence();
             NodeDrawableCollector nodeDrawableCollector = new NodeDrawableCollector((ParseNodeDrawable) parseTree.getRoot(), new IsLeafNode());
@@ -129,8 +131,8 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
             ArrayList<WordNodePair> wordNodePairList = new ArrayList<>();
             for (int i = 0; i < leafList.size(); i++) {
                 ParseNodeDrawable parseNode = leafList.get(i);
-                WordNodePair wordNodePair = new WordNodePair(parseNode, i + 1);
-                if (wordNodePair.getWord().getParse() == null) {
+                WordNodePair wordNodePair = new WordNodePair(parseNode, parameter.getLanguage(), i + 1);
+                if (parameter.getLanguage().equals(Language.TURKISH) && wordNodePair.getWord().getParse() == null) {
                     throw new MorphologicalAnalysisNotExistsException(parseTree.getFileDescription().getFileName());
                 }
                 wordNodePair.updateNode();
@@ -142,7 +144,7 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
                 annotatedSentence.addWord(wordNodePair.getWord());
                 wordNodePairList.add(wordNodePair);
             }
-            constructDependenciesFromTree(wordNodePairList, models);
+            constructDependenciesFromTree(wordNodePairList, parameter);
             return annotatedSentence;
         }
         return null;

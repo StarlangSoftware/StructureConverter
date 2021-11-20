@@ -2,6 +2,7 @@ import AnnotatedTree.*;
 import AnnotatedTree.Processor.Condition.IsTurkishLeafNode;
 import AnnotatedTree.Processor.NodeDrawableCollector;
 import ParseTree.*;
+import Translation.Tree.ParallelTreeBankDrawable;
 
 import java.io.File;
 import java.util.*;
