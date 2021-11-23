@@ -77,8 +77,11 @@ public class EnglishBasicDependencyOracle extends BasicOracle {
 
     @Override
     public ArrayList<Decision> makeDecisions(int firstIndex, int lastIndex, ArrayList<WordNodePair> wordNodePairList, ParseNodeDrawable node) {
-        ParseNode parent = wordNodePairList.get(firstIndex).getNode().getParent();
-        int headIndex = parent.getChildIndex(parent.headChild());
-        return setToAndAddUniversalDependency(firstIndex, headIndex, wordNodePairList, lastIndex, (ParseNodeDrawable) parent);
+        ParseNode headChild = node.headChild();
+        int headIndex = firstIndex;
+        if (headChild != null) {
+            headIndex += node.getChildIndex(headChild);
+        }
+        return setToAndAddUniversalDependency(firstIndex, headIndex, wordNodePairList, lastIndex, node);
     }
 }

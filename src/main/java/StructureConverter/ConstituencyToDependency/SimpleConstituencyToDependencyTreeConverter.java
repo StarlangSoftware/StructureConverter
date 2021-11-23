@@ -135,11 +135,8 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
                 if (parameter.getLanguage().equals(Language.TURKISH) && wordNodePair.getWord().getParse() == null) {
                     throw new MorphologicalAnalysisNotExistsException(parseTree.getFileDescription().getFileName());
                 }
-                wordNodePair.updateNode();
-                if (wordNodePair.getNode().getParent() != null && wordNodePair.getNode().getParent().numberOfChildren() == 1) {
+                while (wordNodePair.getNode().getParent() != null && wordNodePair.getNode().getParent().numberOfChildren() == 1) {
                     wordNodePair.updateNode();
-                    System.out.println("check this");
-                    return null;
                 }
                 annotatedSentence.addWord(wordNodePair.getWord());
                 wordNodePairList.add(wordNodePair);
