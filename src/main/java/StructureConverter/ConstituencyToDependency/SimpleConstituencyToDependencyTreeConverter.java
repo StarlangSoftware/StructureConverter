@@ -53,10 +53,13 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
                     for (int j = 0; j < decisions.size(); j++) {
                         Decision decision = decisions.get(j);
                         if (decision.getNo() < 0) {
-                            if (wordNodePairList.get(i + j).getNode().getParent() != null) {
-                                wordNodePairList.get(i + j).updateNode();
-                                if (wordNodePairList.get(i + j).getNode().getParent() != null && wordNodePairList.get(i + j).getNode().getParent().numberOfChildren() == 1) {
-                                    wordNodePairList.get(i + j).updateNode();
+                            WordNodePair wordNodePair = wordNodePairList.get(i + j);
+                            if (wordNodePair.getNode().getParent() != null) {
+                                wordNodePair.updateNode();
+                                if (wordNodePair.getNode().getParent() == null) {
+                                    wordNodePair.getWord().setUniversalDependency(0, "root");
+                                } else if (wordNodePair.getNode().getParent().numberOfChildren() == 1) {
+                                    wordNodePair.updateNode();
                                 }
                             }
                         } else {
@@ -77,7 +80,6 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
      */
 
     private void constructDependenciesFromTree(ArrayList<WordNodePair> wordNodePairList, Parameter parameter) {
-        setRoot(wordNodePairList);
         ArrayList<ParseNodeDrawable> parseNodeDrawableList = new ArrayList<>();
         ArrayList<WordNodePair> wordNodePairs = new ArrayList<>(wordNodePairList);
         for (WordNodePair wordNodePair : wordNodePairList) {
@@ -93,25 +95,6 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
                     wordNodePairs.add(wordNodePair);
                 }
             }
-        }
-    }
-
-    /**
-     * Changes root's {@link DependencyParser.Universal.UniversalDependencyType}.
-     * @param wordNodePairList {@link WordNodePair} {@link ArrayList}.
-     */
-
-    private void setRoot(ArrayList<WordNodePair> wordNodePairList) {
-        AnnotatedWord last = null;
-        for (int i = 0; i < wordNodePairList.size(); i++) {
-            WordNodePair wordNodePair = wordNodePairList.get(wordNodePairList.size() - i - 1);
-            if (!wordNodePair.getWord().isPunctuation()) {
-                last = wordNodePair.getWord();
-                break;
-            }
-        }
-        if (last != null) {
-            last.setUniversalDependency(0, "root");
         }
     }
 

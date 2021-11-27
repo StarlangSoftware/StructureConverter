@@ -15,6 +15,8 @@ public class EnglishBasicDependencyOracle extends BasicOracle {
             return "PUNCT";
         }
         switch (dependent) {
+            case "NP-SBJ":
+                return "NSUBJ";
             case "ADVP":
                 if (dependentWord.getPosTag().startsWith("VB")) {
                     return "ADVCL";
@@ -23,7 +25,9 @@ public class EnglishBasicDependencyOracle extends BasicOracle {
                     return "NMOD";
                 }
                 return "ADVMOD";
-            case "ADJP":
+            case "JJ":
+            case "JJR":
+            case "JJS":
                 switch (head) {
                     case "NP":
                         if (dependentWord.getPosTag().startsWith("VB")) {
@@ -33,6 +37,7 @@ public class EnglishBasicDependencyOracle extends BasicOracle {
                 }
                 return "ADVMOD";
             case "PP":
+            case "PP-LOC":
                 switch (head) {
                     case "NP":
                         return "CASE";
@@ -42,11 +47,21 @@ public class EnglishBasicDependencyOracle extends BasicOracle {
                         }
                         return "ADVMOD";
                 }
-            case "DP":
+            case "DT":
                 return "DET";
             case "NP":
+            case "NP-TMP":
+            case "NN":
+            case "NNS":
+            case "NNP":
+            case "NNPS":
                 switch (head) {
                     case "NP":
+                    case "NP-TMP":
+                    case "NN":
+                    case "NNS":
+                    case "NNPS":
+                    case "NNP":
                         if (dependentWord.getPosTag().startsWith("NNP") && headWord.getPosTag().startsWith("NNP")) {
                             return "FLAT";
                         }
@@ -62,7 +77,7 @@ public class EnglishBasicDependencyOracle extends BasicOracle {
                     default:
                         return "DEP";
                 }
-            case "NUM":
+            case "CD":
                 return "NUMMOD";
             case "INTJ":
                 return "DISCOURSE";
