@@ -16,7 +16,9 @@ public class EnglishBasicDependencyOracle extends BasicOracle {
         }
         switch (dependent) {
             case "NP-SBJ":
+            case "NP-SBJ-1":
                 return "NSUBJ";
+            case "ADVP-MNR":
             case "ADVP":
                 if (dependentWord.getPosTag().startsWith("VB")) {
                     return "ADVCL";
@@ -25,6 +27,7 @@ public class EnglishBasicDependencyOracle extends BasicOracle {
                     return "NMOD";
                 }
                 return "ADVMOD";
+            case "ADJP":
             case "JJ":
             case "JJR":
             case "JJS":
@@ -37,6 +40,9 @@ public class EnglishBasicDependencyOracle extends BasicOracle {
                 }
                 return "ADVMOD";
             case "PP":
+            case "PP-DIR":
+            case "PP-CLR":
+            case "PP-LOC-CLR":
             case "PP-LOC":
                 switch (head) {
                     case "NP":
@@ -48,8 +54,12 @@ public class EnglishBasicDependencyOracle extends BasicOracle {
                         return "ADVMOD";
                 }
             case "DT":
+            case "PRP$":
+            case "PDT":
                 return "DET";
             case "NP":
+            case "NP-PRD":
+            case "NP-ADV":
             case "NP-TMP":
             case "NN":
             case "NNS":
@@ -61,6 +71,8 @@ public class EnglishBasicDependencyOracle extends BasicOracle {
                     case "NN":
                     case "NNS":
                     case "NNPS":
+                    case "NP-PRD":
+                    case "NP-ADV":
                     case "NNP":
                         if (dependentWord.getPosTag().startsWith("NNP") && headWord.getPosTag().startsWith("NNP")) {
                             return "FLAT";
@@ -70,6 +82,9 @@ public class EnglishBasicDependencyOracle extends BasicOracle {
                         return "OBL";
                 }
                 return "NMOD";
+            case "SBAR-NOM":
+            case "SBAR-PRP-PRD":
+            case "SBAR":
             case "S":
                 switch (head) {
                     case "VP":

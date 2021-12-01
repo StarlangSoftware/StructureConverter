@@ -3,7 +3,7 @@ package StructureConverter.ConstituencyToDependency;
 import AnnotatedSentence.*;
 import AnnotatedTree.ParseNodeDrawable;
 import AnnotatedTree.ParseTreeDrawable;
-import AnnotatedTree.Processor.Condition.IsLeafNode;
+import AnnotatedTree.Processor.Condition.IsTurkishLeafNode;
 import AnnotatedTree.Processor.NodeDrawableCollector;
 import StructureConverter.MorphologicalAnalysisNotExistsException;
 import StructureConverter.WordNodePair;
@@ -98,6 +98,55 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
         }
     }
 
+    private boolean isNone(ParseNodeDrawable child) {
+        ParseNodeDrawable grandChild = child;
+        while (grandChild.numberOfChildren() == 1) {
+            grandChild = (ParseNodeDrawable) grandChild.firstChild();
+            if (grandChild.getData().getName().equals("-NONE-")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void collect(ArrayList<ParseNodeDrawable> parseNodeDrawables, ArrayList<ParseNodeDrawable> update, ParseNodeDrawable parent) {
+        ArrayList<ParseNodeDrawable> remove = new ArrayList<>();
+        for (int i = 0; i < parent.numberOfChildren(); i++) {
+            ParseNodeDrawable child = (ParseNodeDrawable) parent.getChild(i);
+            if (!child.isLeaf()) {
+                if (!isNone(child)) {
+                    collect(parseNodeDrawables, update, child);
+                } else {
+                    remove.add(child);
+                }
+            } else {
+                parseNodeDrawables.add(child);
+            }
+        }
+        for (ParseNodeDrawable nodeDrawable : remove) {
+            parent.removeChild(nodeDrawable);
+        }
+        if (!remove.isEmpty() && parent.numberOfChildren() == 1) {
+            if (parent.firstChild().numberOfChildren() > 1) {
+                update.add(parent);
+            }
+        }
+    }
+
+    private ArrayList<ParseNodeDrawable> collectAndPrune(ParseTreeDrawable parseTreeDrawable) {
+        ParseNodeDrawable root = (ParseNodeDrawable) parseTreeDrawable.getRoot();
+        ArrayList<ParseNodeDrawable> nodeDrawables = new ArrayList<>();
+        ArrayList<ParseNodeDrawable> update = new ArrayList<>();
+        collect(nodeDrawables, update, root);
+        for (ParseNodeDrawable node : update) {
+            ParseNodeDrawable child = ((ParseNodeDrawable) node.getChild(0));
+            ParseNodeDrawable parent = (ParseNodeDrawable) node.getParent();
+            parent.removeChild(node);
+            parent.addChild(child);
+        }
+        return nodeDrawables;
+    }
+
     /**
      * Converts {@link ParseTreeDrawable} to {@link AnnotatedSentence}.
      * @param parseTree {@link ParseTreeDrawable} to convert.
@@ -109,8 +158,13 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
     public AnnotatedSentence convert(ParseTreeDrawable parseTree, Parameter parameter) throws MorphologicalAnalysisNotExistsException {
         if (parseTree != null) {
             AnnotatedSentence annotatedSentence = new AnnotatedSentence();
-            NodeDrawableCollector nodeDrawableCollector = new NodeDrawableCollector((ParseNodeDrawable) parseTree.getRoot(), new IsLeafNode());
-            ArrayList<ParseNodeDrawable> leafList = nodeDrawableCollector.collect();
+            ArrayList<ParseNodeDrawable> leafList;
+            if (parameter.getLanguage().equals(Language.TURKISH)) {
+                NodeDrawableCollector nodeDrawableCollector = new NodeDrawableCollector((ParseNodeDrawable) parseTree.getRoot(), new IsTurkishLeafNode());
+                leafList = nodeDrawableCollector.collect();
+            } else {
+                leafList = collectAndPrune(parseTree);
+            }
             ArrayList<WordNodePair> wordNodePairList = new ArrayList<>();
             for (int i = 0; i < leafList.size(); i++) {
                 ParseNodeDrawable parseNode = leafList.get(i);
