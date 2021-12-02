@@ -147,8 +147,7 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
         for (ParseNodeDrawable node : update) {
             ParseNodeDrawable child = ((ParseNodeDrawable) node.getChild(0));
             ParseNodeDrawable parent = (ParseNodeDrawable) node.getParent();
-            parent.removeChild(node);
-            parent.addChild(child);
+            parent.replaceChild(node, child);
         }
         return nodeDrawables;
     }
