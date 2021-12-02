@@ -101,21 +101,24 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
     private boolean isNone(ParseNodeDrawable child) {
         ParseNodeDrawable grandChild = child;
         while (grandChild.numberOfChildren() == 1) {
-            grandChild = (ParseNodeDrawable) grandChild.firstChild();
             if (grandChild.getData().getName().equals("-NONE-")) {
                 return true;
             }
+            grandChild = (ParseNodeDrawable) grandChild.firstChild();
         }
         return false;
     }
 
-    private void collect(ArrayList<ParseNodeDrawable> parseNodeDrawables, ArrayList<ParseNodeDrawable> update, ParseNodeDrawable parent) {
+    private ParseNodeDrawable collect(ArrayList<ParseNodeDrawable> parseNodeDrawables, ArrayList<ParseNodeDrawable> update, ParseNodeDrawable parent) {
         ArrayList<ParseNodeDrawable> remove = new ArrayList<>();
         for (int i = 0; i < parent.numberOfChildren(); i++) {
             ParseNodeDrawable child = (ParseNodeDrawable) parent.getChild(i);
             if (!child.isLeaf()) {
                 if (!isNone(child)) {
-                    collect(parseNodeDrawables, update, child);
+                    ParseNodeDrawable node = collect(parseNodeDrawables, update, child);
+                    if (node != null) {
+                        remove.add(node);
+                    }
                 } else {
                     remove.add(child);
                 }
@@ -127,10 +130,13 @@ public class SimpleConstituencyToDependencyTreeConverter implements Constituency
             parent.removeChild(nodeDrawable);
         }
         if (!remove.isEmpty() && parent.numberOfChildren() == 1) {
-            if (parent.firstChild().numberOfChildren() > 1) {
+            if (!parent.firstChild().firstChild().isLeaf()) {
                 update.add(parent);
             }
+        } else if (parent.numberOfChildren() == 0) {
+            return parent;
         }
+        return null;
     }
 
     private ArrayList<ParseNodeDrawable> collectAndPrune(ParseTreeDrawable parseTreeDrawable) {
