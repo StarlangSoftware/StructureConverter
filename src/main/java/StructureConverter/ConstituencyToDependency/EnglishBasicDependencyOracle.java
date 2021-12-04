@@ -14,11 +14,18 @@ public class EnglishBasicDependencyOracle extends BasicDependencyOracle {
         if (condition1 || condition2) {
             return "PUNCT";
         }
+        if (dependent.startsWith("NP-SBJ")) {
+            return "NSUBJ";
+        }
+        int index = dependent.indexOf("-");
+        if (index > -1) {
+            dependent = dependent.substring(0, index);
+        }
+        index = head.indexOf("-");
+        if (index > -1) {
+            head = head.substring(0, index);
+        }
         switch (dependent) {
-            case "NP-SBJ":
-            case "NP-SBJ-1":
-                return "NSUBJ";
-            case "ADVP-MNR":
             case "ADVP":
                 if (dependentWord.getPosTag().startsWith("VB")) {
                     return "ADVCL";
@@ -40,10 +47,6 @@ public class EnglishBasicDependencyOracle extends BasicDependencyOracle {
                 }
                 return "ADVMOD";
             case "PP":
-            case "PP-DIR":
-            case "PP-CLR":
-            case "PP-LOC-CLR":
-            case "PP-LOC":
                 switch (head) {
                     case "NP":
                         return "CASE";
@@ -58,21 +61,15 @@ public class EnglishBasicDependencyOracle extends BasicDependencyOracle {
             case "PDT":
                 return "DET";
             case "NP":
-            case "NP-PRD":
-            case "NP-ADV":
-            case "NP-TMP":
             case "NN":
             case "NNS":
             case "NNP":
             case "NNPS":
                 switch (head) {
                     case "NP":
-                    case "NP-TMP":
                     case "NN":
                     case "NNS":
                     case "NNPS":
-                    case "NP-PRD":
-                    case "NP-ADV":
                     case "NNP":
                         if (dependentWord.getPosTag().startsWith("NNP") && headWord.getPosTag().startsWith("NNP")) {
                             return "FLAT";
@@ -82,9 +79,10 @@ public class EnglishBasicDependencyOracle extends BasicDependencyOracle {
                         return "OBL";
                 }
                 return "NMOD";
-            case "SBAR-NOM":
-            case "SBAR-PRP-PRD":
             case "SBAR":
+            case "SBARQ":
+            case "SINV":
+            case "SQ":
             case "S":
                 switch (head) {
                     case "VP":
