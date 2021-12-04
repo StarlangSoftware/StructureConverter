@@ -7,7 +7,7 @@ import StructureConverter.WordNodePair;
 
 import java.util.ArrayList;
 
-public class EnglishBasicDependencyOracle extends BasicOracle {
+public class EnglishBasicDependencyOracle extends BasicDependencyOracle {
 
     @Override
     protected String findData(String dependent, String head, boolean condition1, boolean condition2, AnnotatedWord dependentWord, AnnotatedWord headWord) {
